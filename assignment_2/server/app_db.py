@@ -1,13 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# vim:fileencoding=utf-8
 import json
 import sqlite3
+import requests
+import re
 
-from flask import Flask, g, request
+from bs4 import BeautifulSoup
+from flask import Flask, g, request, url_for, redirect, flash, render_template, render_template_string
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
 DATABASE = 'my_database.sqlite'
+app.secret_key = "super secret key"
+pattern = "\www.(.*?)\."
 
 
 def get_db():
@@ -23,8 +31,11 @@ def init_db():
         cursor = db.cursor()
         cursor.executescript(
             """CREATE TABLE IF NOT EXISTS Users
-               (id integer primary key, name text not null,
-               surname text not null, age integer)"""
+               (id integer primary key,
+               name text not null,
+               brand text not null,
+               site text not null,
+               price integer)"""
         )
         db.commit()
 
@@ -39,17 +50,51 @@ def get_all():
     return json_result
 
 
-@app.route('/new_user', methods=['POST'])
-def create_new_user():
-    user_json = request.get_json()
-    for key in ['name', 'surname', 'age']:
-        assert key in user_json, f'{key} not found in the request'
-    query = f"INSERT INTO Users (name, surname, age) VALUES ('{user_json['name']}', '{user_json['surname']}', {user_json['age']});"
+def create_new_item(data, site):
     db_conn = get_db()
-    db_conn.execute(query)
+    for i in data:
+        user_json = json.loads(i)
+        try:
+            for key in ['shortName', 'brandName', 'price']:
+                assert key in user_json, f'{key} not found in the request'
+            query = f"INSERT INTO Users (name, brand, site, price) VALUES ('{user_json['shortName']}', '{user_json['brandName']}', '{site}', {user_json['price']});"
+            db_conn.execute(query)
+        except AssertionError:
+            continue
     db_conn.commit()
     db_conn.close()
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+
+def parse_site(ref):
+    r = requests.get(ref)
+    html = r.content
+    soup = BeautifulSoup(html, "lxml")
+    site = re.findall(pattern, ref)[0]
+    data = ""
+    if site == "citilink":
+        data = [item['data-params'] for item in soup.find_all('div', attrs={'data-params': True})]
+    elif site == "wildberries":
+        data = list()
+        names = list(map(lambda x: x.string, soup.find_all('span', class_="goods-name")))
+        brand_names = list(map(lambda x: x.contents[0], soup.find_all("strong", {"class": "brand-name"})))
+        prices = list(map(lambda x: re.sub("\D", "", x.string), soup.find_all("ins", class_='lower-price')))
+        for name, brandName, price in zip(names, brand_names, prices):
+            json_model = '{"shortName":"' + name.replace('"',
+                                                         "") + '","brandName":"' + brandName.replace("'", "") + '","price":' + price + "}"
+            data.append(json_model)
+    create_new_item(data, site)
+
+
+@app.route('/', methods=['GET', 'POST'])
+def add_parser_site():
+    if request.method == "POST":
+        ref_of_site = request.form['name']
+        # ref_of_site = "https://www.citilink.ru/catalog/mobile/smartfony/-premium/?available=1&status=55395790&p=2"
+        ref_of_site = "https://www.wildberries.ru/catalog/0/search.aspx?search=%D0%BC%D1%83%D0%B6%D1%81%D0%BA%D0%B8%D0%B5%20%D1%87%D0%B5%D1%80%D0%BD%D1%8B%D0%B5%20%D0%B4%D0%B6%D0%B8%D0%BD%D1%81%D1%8B&sort=popular"
+        parse_site(ref_of_site)
+        return redirect('/get_all')
+
+    return render_template("index.html")
 
 
 @app.teardown_appcontext
@@ -61,4 +106,4 @@ def close_connection(exception):
 
 if __name__ == '__main__':
     init_db()
-    app.run()
+    app.run(debug=True)

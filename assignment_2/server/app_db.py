@@ -30,7 +30,7 @@ def init_db():
         db = get_db()
         cursor = db.cursor()
         cursor.executescript(
-            """CREATE TABLE IF NOT EXISTS Users
+            """CREATE TABLE IF NOT EXISTS Items
                (id integer primary key,
                name text not null,
                brand text not null,
@@ -44,7 +44,7 @@ def init_db():
 def get_all():
     db_cursor = get_db().cursor()
     db_cursor.row_factory = sqlite3.Row
-    db_cursor.execute("SELECT * From Users")
+    db_cursor.execute("SELECT * From Items")
     result = db_cursor.fetchall()
     json_result = json.dumps([dict(row) for row in result])
     return json_result
@@ -57,44 +57,44 @@ def create_new_item(data, site):
         try:
             for key in ['shortName', 'brandName', 'price']:
                 assert key in user_json, f'{key} not found in the request'
-            query = f"INSERT INTO Users (name, brand, site, price) VALUES ('{user_json['shortName']}', '{user_json['brandName']}', '{site}', {user_json['price']});"
+            query = f"INSERT INTO Items (name, brand, site, price) VALUES ('{user_json['shortName']}', '{user_json['brandName']}', '{site}', {user_json['price']});"
             db_conn.execute(query)
         except AssertionError:
             continue
     db_conn.commit()
-    db_conn.close()
 
 
-def parse_site(ref):
-    r = requests.get(ref)
+def parse_citilink():
+    citilink = "https://www.citilink.ru/catalog/mobile/smartfony/-premium/?available=1&status=55395790&p=2"
+    r = requests.get(citilink)
     html = r.content
     soup = BeautifulSoup(html, "lxml")
-    site = re.findall(pattern, ref)[0]
-    data = ""
-    if site == "citilink":
-        data = [item['data-params'] for item in soup.find_all('div', attrs={'data-params': True})]
-    elif site == "wildberries":
-        data = list()
-        names = list(map(lambda x: x.string, soup.find_all('span', class_="goods-name")))
-        brand_names = list(map(lambda x: x.contents[0], soup.find_all("strong", {"class": "brand-name"})))
-        prices = list(map(lambda x: re.sub("\D", "", x.string), soup.find_all("ins", class_='lower-price')))
-        for name, brandName, price in zip(names, brand_names, prices):
-            json_model = '{"shortName":"' + name.replace('"',
-                                                         "") + '","brandName":"' + brandName.replace("'", "") + '","price":' + price + "}"
-            data.append(json_model)
-    create_new_item(data, site)
+    data = [item['data-params'] for item in soup.find_all('div', attrs={'data-params': True})]
+    create_new_item(data, 'Citilink')
+
+
+def parse_wildberries():
+    wildberries = "https://www.wildberries.ru/catalog/0/search.aspx?search=%D0%BC%D1%83%D0%B6%D1%81%D0%BA%D0%B8%D0%B5%20%D1%87%D0%B5%D1%80%D0%BD%D1%8B%D0%B5%20%D0%B4%D0%B6%D0%B8%D0%BD%D1%81%D1%8B&sort=popular"
+    r = requests.get(wildberries)
+    html = r.content
+    soup = BeautifulSoup(html, "lxml")
+    data = list()
+    names = list(map(lambda x: x.string, soup.find_all('span', class_="goods-name")))
+    brand_names = list(map(lambda x: x.contents[0], soup.find_all("strong", {"class": "brand-name"})))
+    prices = list(map(lambda x: re.sub("\D", "", x.string), soup.find_all("ins", class_='lower-price')))
+    for name, brandName, price in zip(names, brand_names, prices):
+        name = name.replace('"', "")
+        brandName = brandName.replace("'", "")
+        json_model = "{" + f'"shortName":"{name}","brandName": "{brandName}", "price":{price}' + "}"
+        data.append(json_model)
+    create_new_item(data, "Wildberries")
 
 
 @app.route('/', methods=['GET', 'POST'])
 def add_parser_site():
-    if request.method == "POST":
-        ref_of_site = request.form['name']
-        # ref_of_site = "https://www.citilink.ru/catalog/mobile/smartfony/-premium/?available=1&status=55395790&p=2"
-        ref_of_site = "https://www.wildberries.ru/catalog/0/search.aspx?search=%D0%BC%D1%83%D0%B6%D1%81%D0%BA%D0%B8%D0%B5%20%D1%87%D0%B5%D1%80%D0%BD%D1%8B%D0%B5%20%D0%B4%D0%B6%D0%B8%D0%BD%D1%81%D1%8B&sort=popular"
-        parse_site(ref_of_site)
-        return redirect('/get_all')
-
-    return render_template("index.html")
+    parse_citilink()
+    parse_wildberries()
+    return redirect('/get_all')
 
 
 @app.teardown_appcontext

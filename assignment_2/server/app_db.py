@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 # vim:fileencoding=utf-8
 import json
-import sqlite3
-import requests
 import re
+import sqlite3
 
+import requests
 from bs4 import BeautifulSoup
-from flask import Flask, g, request, url_for, redirect, flash, render_template, render_template_string
+from flask import Flask, g, redirect
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -15,7 +15,6 @@ CORS(app)
 
 DATABASE = 'my_database.sqlite'
 app.secret_key = "super secret key"
-pattern = "\www.(.*?)\."
 
 
 def get_db():
@@ -79,15 +78,15 @@ def parse_wildberries():
     html = r.content
     soup = BeautifulSoup(html, "lxml")
     data = list()
-    names = list(map(lambda x: x.string, soup.find_all('span', class_="goods-name")))
-    brand_names = list(map(lambda x: x.contents[0], soup.find_all("strong", {"class": "brand-name"})))
-    prices = list(map(lambda x: re.sub("\D", "", x.string), soup.find_all("ins", class_='lower-price')))
-    for name, brandName, price in zip(names, brand_names, prices):
+    names = map(lambda x: x.string, soup.find_all('span', class_="goods-name"))
+    brand_names = map(lambda x: x.contents[0], soup.find_all("strong", {"class": "brand-name"}))
+    prices = map(lambda x: re.sub("\D", "", x.string), soup.find_all("ins", class_='lower-price'))
+    for name, brand_name, price in zip(names, brand_names, prices):
         name = name.replace('"', "")
-        brandName = brandName.replace("'", "")
-        json_model = "{" + f'"shortName":"{name}","brandName": "{brandName}", "price":{price}' + "}"
+        brand_name = brand_name.replace("'", "")
+        json_model = f'{{"shortName":" {name} ","brandName": " {brand_name} ", "price": {price} }}'
         data.append(json_model)
-    create_new_item(data, "Wildberries")
+    create_new_item(data, 'Wildberries')
 
 
 @app.route('/', methods=['GET', 'POST'])

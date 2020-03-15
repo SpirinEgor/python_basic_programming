@@ -9,8 +9,8 @@ def hello_world():
 
 
 @app.route('/www')
-def hello_world1():
-    return 'Hello World1!'
+def hello_worl():
+    return 'Hello World!'
 
 
 if __name__ == '__main__':

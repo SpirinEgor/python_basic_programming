@@ -21,10 +21,11 @@ def init_db():
     with app.app_context():
         db = get_db()
         cursor = db.cursor()
+        cursor.execute('PRAGMA encoding="UTF-8";')
         cursor.executescript(
-            """CREATE TABLE IF NOT EXISTS Users
+            """CREATE TABLE IF NOT EXISTS Gifts
                (id integer primary key, name text not null,
-               surname text not null, age integer)"""
+               price integer, link text not null)"""
         )
         db.commit()
 
@@ -33,24 +34,36 @@ def init_db():
 def get_all():
     db_cursor = get_db().cursor()
     db_cursor.row_factory = sqlite3.Row
-    db_cursor.execute("SELECT * From Users")
+    db_cursor.execute("SELECT * From Gifts")
     result = db_cursor.fetchall()
-    json_result = json.dumps([dict(row) for row in result])
+    json_result = json.dumps([dict(row) for row in result], ensure_ascii=False)
     return json_result
 
 
-@app.route('/new_user', methods=['POST'])
-def create_new_user():
-    user_json = request.get_json()
-    for key in ['name', 'surname', 'age']:
-        assert key in user_json, f'{key} not found in the request'
-    query = f"INSERT INTO Users (name, surname, age) VALUES ('{user_json['name']}', '{user_json['surname']}', {user_json['age']});"
+#@app.route('/new_user', methods=['POST'])
+#def create_new_user():
+#    user_json = request.get_json()
+#    for key in ['name', 'surname', 'age']:
+#        assert key in user_json, f"{key} not found in the request"
+#    query = f"INSERT INTO Users (name, surname, age) VALUES ('{user_json['name']}', '{user_json['surname']}', {user_json['age']});"
+#    db_conn = get_db()
+#    db_conn.execute(query)
+#    db_conn.commit()
+#    db_conn.close()
+#    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+@app.route('/new_gift', methods=['POST'])
+def create_new_gift():
+    gift_json = request.get_json()
+    for key in ['name', 'price', 'link']:
+        assert key in gift_json, f"{key} not found in the request"
+    print(gift_json)    
+    query = u"INSERT INTO Gifts (name, price, link) VALUES ('%s', %s, '%s');" % (gift_json['name'], gift_json['price'], gift_json['link']) 
     db_conn = get_db()
     db_conn.execute(query)
     db_conn.commit()
     db_conn.close()
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-
 
 @app.teardown_appcontext
 def close_connection(exception):

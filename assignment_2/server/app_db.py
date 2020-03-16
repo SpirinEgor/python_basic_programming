@@ -1,8 +1,10 @@
 import json
 import sqlite3
+import requests
 
-from flask import Flask, g, request
+from flask import Flask, g
 from flask_cors import CORS
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 CORS(app)
@@ -22,10 +24,40 @@ def init_db():
         db = get_db()
         cursor = db.cursor()
         cursor.executescript(
-            """CREATE TABLE IF NOT EXISTS Users
-               (id integer primary key, name text not null,
-               surname text not null, age integer)"""
+            """CREATE TABLE IF NOT EXISTS FemaleNews
+               (id integer primary key,
+               title text not null,
+               source text not null)"""
         )
+
+        femaleNews = []
+
+        wonderzine = requests.get('https://www.wonderzine.com/')
+        soup_wonderzine = BeautifulSoup(wonderzine.content, 'html.parser')
+        wonderzine_news = soup_wonderzine.find_all('div', {"class": "title"})
+        for elem in wonderzine_news:
+            femaleNews.append((elem.a.text, 'Wonderzine'))
+
+
+        cosmopolitan = requests.get('https://www.cosmo.ru/news/')
+        soup_cosmopolitan = BeautifulSoup(cosmopolitan.content, 'html.parser')
+        cosmopolitan_news = soup_cosmopolitan.find_all('a', {"class": "news-section-link"})
+        for elem in cosmopolitan_news:
+            femaleNews.append((elem.h3.text, 'Cosmopolitan'))
+
+
+        vogue = requests.get('https://www.vogue.ru/lifestyle')
+        soup_vogue = BeautifulSoup(vogue.content, 'html.parser')
+        vogue_news = soup_vogue.find_all('h3', {"data-test-id": "Hed"})
+        for elem in vogue_news:
+            femaleNews.append((elem.text, 'Vogue'))
+
+        femaleNews.sort(key=lambda x: x[0])
+
+        for elem in femaleNews:
+            print(elem[0])
+            cursor.execute("""INSERT INTO FemaleNews (title,source) VALUES(?,?)""", (elem[0], elem[1]))
+
         db.commit()
 
 
@@ -33,23 +65,10 @@ def init_db():
 def get_all():
     db_cursor = get_db().cursor()
     db_cursor.row_factory = sqlite3.Row
-    db_cursor.execute("SELECT * From Users")
+    db_cursor.execute("SELECT * From FemaleNews")
     result = db_cursor.fetchall()
     json_result = json.dumps([dict(row) for row in result])
     return json_result
-
-
-@app.route('/new_user', methods=['POST'])
-def create_new_user():
-    user_json = request.get_json()
-    for key in ['name', 'surname', 'age']:
-        assert key in user_json, f'{key} not found in the request'
-    query = f"INSERT INTO Users (name, surname, age) VALUES ('{user_json['name']}', '{user_json['surname']}', {user_json['age']});"
-    db_conn = get_db()
-    db_conn.execute(query)
-    db_conn.commit()
-    db_conn.close()
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 @app.teardown_appcontext

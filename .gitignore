@@ -1,2 +1,5 @@
 __pycache__/
 .ipynb_checkpoints/
+assignment_2/.idea/
+
+assignment_2/server/my_database.sqlite

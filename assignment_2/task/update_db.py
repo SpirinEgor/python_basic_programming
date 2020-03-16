@@ -6,12 +6,11 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver import Firefox
 
-from common_db import DATABASE
+from common_db import DATABASE, convert_title
 import col_mangachan
 import col_mangafox
 
-def convert_title(title):
-    return title.replace('"', "'")
+
 
 def add_title(info):
     print(info)

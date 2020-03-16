@@ -1,10 +1,10 @@
 import json
 import sqlite3
 
-from flask import Flask, g, request, render_template, send_file
+from flask import Flask, g, request, send_file
 from flask_cors import CORS
 
-from common_db import DATABASE
+from common_db import DATABASE, convert_title
 
 app = Flask(__name__)
 CORS(app)
@@ -22,11 +22,16 @@ def get_scripts():
 def get_index():
     return send_file('index.html')
 
-@app.route('/get/size')
-def get_size():
+@app.route('/get/<text>/size')
+def get_size(text):
     db_cursor = get_db().cursor()
-    db_cursor.execute(''' SELECT COUNT(*) FROM Titles ''')
+    db_cursor.execute(f''' SELECT COUNT(title) FROM Titles
+                           WHERE title LIKE "%{convert_title(text)}%" ''')
     return json.dumps({'size': db_cursor.fetchone()[0]})
+
+@app.route('/get/size')
+def get_full_size():
+    return get_size('')
 
 @app.route('/get/<text>/<count>/<offset>')
 def get_titles(text, count, offset):
@@ -34,7 +39,7 @@ def get_titles(text, count, offset):
     db_cursor.row_factory = sqlite3.Row
     db_cursor.execute(f'''
         SELECT * FROM Titles
-        WHERE title LIKE "%{text}%"
+        WHERE title LIKE "%{convert_title(text)}%"
         ORDER BY title
         LIMIT {offset}, {count} ''')
     result = db_cursor.fetchall()
@@ -42,17 +47,17 @@ def get_titles(text, count, offset):
     dicts = []
 
     for row in result:
-        base_dict = dict(row)
+        row_dict = dict(row)
 
-        db_cursor.execute(f"SELECT * From Chapters{base_dict['id']} ORDER BY volume, chapter")
+        db_cursor.execute(f''' SELECT * From Chapters{row_dict['id']}
+                               ORDER BY volume, chapter ''')
         chapter_result = db_cursor.fetchall()
 
-        base_dict['chapters'] = [dict(chapter_row) for chapter_row in chapter_result]
+        row_dict['chapters'] = [dict(chapter_row) for chapter_row in chapter_result]
 
-        dicts.append(base_dict)
+        dicts.append(row_dict)
 
-    json_result = json.dumps(dicts)
-    return json_result
+    return json.dumps(dicts)
 
 @app.route('/get/<count>/<offset>')
 def get_all_titles(count, offset):

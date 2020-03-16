@@ -16,7 +16,7 @@ function draw_table() {
 }
 
 
-function processForm(e) {
+/*function processForm(e) {
     if (e.preventDefault) e.preventDefault();
     let user_info = $('#form').serializeArray().reduce(function (obj, item) {
         obj[item.name] = item.value;
@@ -41,13 +41,13 @@ function processForm(e) {
     promise.then(function (_) {
         draw_table();
     }).catch(function (err) {
-        console.log("can't add new user: " + err);
+        console.log("can't add new book: " + err);
     })
 
     // request.always(function (data) {
     //     draw_table();
     // });
-}
+}*/
 
 const form = document.getElementById('form');
 if (form.attachEvent) {

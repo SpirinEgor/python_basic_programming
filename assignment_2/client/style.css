@@ -1,0 +1,44 @@
+html{
+    margin:0;
+    font-family: georgia;
+    font-size: 2vh;
+    color: #5d3200;
+}
+#form{
+    margin-left: 5%;
+    margin-top:3%;
+}
+#inputYear{
+    border-radius: 20px;
+    padding:.8em;
+    margin-top:1%;
+    width:30%;
+    font-size: inherit;
+    font-family: inherit;
+    border-color: #e3a866;
+    color: inherit;
+}
+.btn{
+    border-radius: 20px;
+    padding:.8em;
+    background-color: #e3a866;
+    border-color: #e3a866;
+    margin-top:1%;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+}
+.container-fluid{
+    margin-left: 5%;
+    margin-top:3%;
+}
+.thead-dark{
+    background-color:#6d4200;
+    color: #e3a866;
+}
+table{
+    width: 90%;
+}
+td{
+    border-bottom: 1px solid #6d4200;
+}

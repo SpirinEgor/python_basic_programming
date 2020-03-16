@@ -1,0 +1,24 @@
+<doctype html="">
+    <title>Flask Board Games Database</title>
+    <h2>Flask Board Games Database</h2>
+    {% from "_formhelpers.html" import render_field %}
+    <form method="post">
+        <dl>
+            <p>
+                {{ render_field(form.search) }}
+            </p>
+        </dl>
+        <p><input type="submit" value="Search">
+        </p>
+    </form>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class="flashes">
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    {% endwith %}
+    {{ table }}
+</doctype>

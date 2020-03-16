@@ -1,5 +1,6 @@
 from functools import reduce
 from operator import mul
+<<<<<<< HEAD
 import numpy as np
 
 def find_fold_number(n):
@@ -31,5 +32,15 @@ def rle(string):
     if (cou > 1):
         ans += str(cou)
     return ans
+=======
+
+def find_fold_number(n):
+    # Write your code here
+    raise NotImplementedError
+
+def rle(string):
+    # Write your code here
+    raise NotImplementedError
+>>>>>>> 5576d2c0547cd0cd82d09de8985fd192905999ab
 
 test_rle_str = 'ffffbbbbbbbbbbbbbsssssssssssssgggggggggggggggeeeeeeeeeeeellllllllllllllllllooooooooooooffffiiiiiirrrrrrrrrrrrrruuuuuuuummmmmiiiiiiiiiiiiiiiqqqxxxxxxxxxxxxxxxxxzzzzzzwwwwzzzzzzzzzzzzzzzzzzzoooooookkkkkkkkkkiiiiiiiiiiiiiiiizzzzzzzzzzzzzzzzhhhhhhhooooooooooccccccccccccccrrrrrrrkkkxxxxxxxxxxxxxxxxxkkssssssssmcccdddddddddddppppppppppppppnnnnnnnnnnnnnnssssssssssssbbbbbraaaaaasjjjjjjjjjjkkkkkkkkkrrrrrrrrryyyyyyyyyyyyaaaaaaaaaaauuuuuuuuuuuuwwwwwwwwwwgggggggglllllllllvvvvvvvvvvvbbgggggggggggggggqqqqqqlllllllllllllllxxxxxxxxxxaaaaaeeeeeeeeeeeeevvvvvvvvvvvvvdddddddddddpccccddddddddddddddddpppppppppppppppssssssssssssddddddddddddddddddzzzzzzzzzzzzzzzzzzzaaaaaaaaaaaaaaaaaaabfffffffffkkkkkxxxxxwwwwwhhhhhhhhhhhhtttttttttrrrrrrrrrrrrrrrrrroooooooooooooooooooccccccccccccccccppphhhhhhhhhhhhuuuuuurrrrrrrrrrrrrrrrrrryyyyyyyyyyyyyyyyyjjjjjjjjjjjjjjjjjjjjjjjjgggaaaxxxxxxxxxxxlllllllluuuuuuuuuummmmmmmmmmffffffmmmmmmmmmmmmmmmmmmggggggggggggggtttjjjjjjjjjjjjjjjjjjj'

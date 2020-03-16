@@ -1,5 +1,7 @@
 import json
 import sqlite3
+import requests
+from bs4 import BeautifulSoup
 
 from flask import Flask, g, request
 from flask_cors import CORS
@@ -22,10 +24,31 @@ def init_db():
         db = get_db()
         cursor = db.cursor()
         cursor.executescript(
-            """CREATE TABLE IF NOT EXISTS Users
-               (id integer primary key, name text not null,
-               surname text not null, age integer)"""
+            """CREATE TABLE IF NOT EXISTS Products
+               (id integer primary key, shop text not null,
+               name text not null)"""
         )
+
+        Products = []
+
+        xiaomi = requests.get('https://www.mi.com/ru/list/')
+        mi_soup = BeautifulSoup(xiaomi.content, 'html.parser')
+        mi_products = mi_soup.find_all('a', {"class": "product-name"})
+        for prod in mi_products:
+            if not prod.text.startswith("https://www.mi.com/ru/list/"):
+                Products.append(('Xiaomi', prod.text))
+
+        ozon = requests.get('https://www.svyaznoy.ru/catalog/phone/225')
+        oz_soup = BeautifulSoup(ozon.content, 'html.parser')
+        oz_products = oz_soup.find_all('div', {"class": "s-menu-el"})
+        for prod in oz_products:
+            if prod.a.get('href').startswith("/catalog/phone/225/"):
+                Products.append(('Ozon', prod.a.text))
+
+        for prods in Products:
+            print(prods[1])
+            cursor.execute("""INSERT INTO Products (shop,name) VALUES(?,?);""",
+                           (prods[0], prods[1]))
         db.commit()
 
 
@@ -33,23 +56,10 @@ def init_db():
 def get_all():
     db_cursor = get_db().cursor()
     db_cursor.row_factory = sqlite3.Row
-    db_cursor.execute("SELECT * From Users")
+    db_cursor.execute("SELECT * From Products")
     result = db_cursor.fetchall()
     json_result = json.dumps([dict(row) for row in result])
     return json_result
-
-
-@app.route('/new_user', methods=['POST'])
-def create_new_user():
-    user_json = request.get_json()
-    for key in ['name', 'surname', 'age']:
-        assert key in user_json, f'{key} not found in the request'
-    query = f"INSERT INTO Users (name, surname, age) VALUES ('{user_json['name']}', '{user_json['surname']}', {user_json['age']});"
-    db_conn = get_db()
-    db_conn.execute(query)
-    db_conn.commit()
-    db_conn.close()
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 @app.teardown_appcontext
@@ -60,5 +70,7 @@ def close_connection(exception):
 
 
 if __name__ == '__main__':
+
     init_db()
+
     app.run()

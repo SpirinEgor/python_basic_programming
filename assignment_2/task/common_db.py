@@ -1,0 +1,2 @@
+
+DATABASE = 'database.sqlite'

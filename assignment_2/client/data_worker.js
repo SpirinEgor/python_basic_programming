@@ -15,7 +15,8 @@ function draw_table() {
     });
 }
 
-function parsingCitilinkForm() {
+function parsingCitilinkForm(e) {
+        if (e.preventDefault()) e.preventDefault();
         let promise = new Promise(function(resolve, reject) {
         $.ajax({
             type: "POST",
@@ -36,7 +37,8 @@ function parsingCitilinkForm() {
     });
 }
 
-function parsingWildberriesForm() {
+function parsingWildberriesForm(e) {
+        if (e.preventDefault()) e.preventDefault();
         let promise = new Promise(function(resolve, reject) {
         $.ajax({
             type: "POST",

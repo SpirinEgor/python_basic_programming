@@ -15,20 +15,12 @@ function draw_table() {
     });
 }
 
-
-function processForm(e) {
-    if (e.preventDefault) e.preventDefault();
-    let user_info = $('#form').serializeArray().reduce(function (obj, item) {
-        obj[item.name] = item.value;
-        return obj;
-    }, {});
-    let promise = new Promise(function(resolve, reject) {
+function parsingCitilinkForm() {
+        let promise = new Promise(function(resolve, reject) {
         $.ajax({
             type: "POST",
             contentType: "application/json; charset=utf-8",
-            url: "http://127.0.0.1:5000/new_user",
-            data: JSON.stringify(user_info),
-            dataType: "json",
+            url: "http://127.0.0.1:5000/parse_citilink",
             success: function (data) {
                 resolve(data);
             },
@@ -37,21 +29,47 @@ function processForm(e) {
             }
         });
     });
-
-    promise.then(function (_) {
+        promise.then(function (_) {
         draw_table();
     }).catch(function (err) {
         console.log("can't add new user: " + err);
-    })
-
-    // request.always(function (data) {
-    //     draw_table();
-    // });
+    });
 }
 
-const form = document.getElementById('form');
+function parsingWildberriesForm() {
+        let promise = new Promise(function(resolve, reject) {
+        $.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            url: "http://127.0.0.1:5000/parse_wildberries",
+            success: function (data) {
+                resolve(data);
+            },
+            error: function (err) {
+                reject(err);
+            }
+        });
+    });
+        promise.then(function (_) {
+        draw_table();
+    }).catch(function (err) {
+        console.log("can't parse site: " + err);
+    });
+}
+
+const form = document.getElementById("btn-handler");
 if (form.attachEvent) {
-    form.attachEvent("submit", processForm);
+    form.attachEvent("submit", function (e){
+        if (e.target.id === "citilink"){
+            parsingCitilinkForm(e);
+        }
+        else parsingWildberriesForm(e);
+    });
 } else {
-    form.addEventListener("submit", processForm);
+    form.addEventListener("submit", function (e){
+        if (e.target.id === "citilink"){
+            parsingCitilinkForm(e);
+        }
+        else parsingWildberriesForm(e);
+    });
 }

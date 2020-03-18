@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# vim:fileencoding=utf-8
 import json
 import re
 import sqlite3
 
 import requests
 from bs4 import BeautifulSoup
-from flask import Flask, g, redirect
+from flask import Flask, g
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -36,6 +33,7 @@ def init_db():
                site text not null,
                price integer)"""
         )
+        cursor.executescript("""DELETE FROM Items""")
         db.commit()
 
 
@@ -89,11 +87,16 @@ def parse_wildberries():
     create_new_item(data, 'Wildberries')
 
 
-@app.route('/', methods=['GET', 'POST'])
-def add_parser_site():
-    parse_citilink()
+@app.route('/parse_wildberries', methods=['POST'])
+def add_parser_wildberries():
     parse_wildberries()
-    return redirect('/get_all')
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+
+@app.route('/parse_citilink', methods=['POST'])
+def add_parser_citilink():
+    parse_citilink()
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 @app.teardown_appcontext
@@ -105,4 +108,4 @@ def close_connection(exception):
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
+    app.run()

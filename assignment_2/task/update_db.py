@@ -11,10 +11,10 @@ import col_mangachan
 import col_mangafox
 
 
-
 def add_title(info):
     print(info)
-    data.cursor.execute(f''' INSERT INTO Titles (title, link, cover) VALUES ("{convert_title(info.title)}", "{info.link}", "{info.cover}") ''')
+    data.cursor.execute(f''' INSERT INTO Titles (title, link, cover)
+                             VALUES ("{convert_title(info.title)}", "{info.link}", "{info.cover}") ''')
     no = data.cursor.lastrowid
     data.cursor.execute(f''' CREATE TABLE Chapters{no}
                             ( link ntext not null
@@ -22,6 +22,7 @@ def add_title(info):
                             , chapter integer
                             )''')
     return no
+
 
 def update_chapters(collector, info, t_id):
     data.driver.get(info.link)
@@ -33,6 +34,7 @@ def update_chapters(collector, info, t_id):
                                 (link, volume, chapter)
                             VALUES
                                 ("{chapter.link}", "{chapter.volume}", "{chapter.chapter}") ''')
+
 
 def update_title(collector, info):
     print(info.link)
@@ -47,7 +49,7 @@ def update_title(collector, info):
         data.db.commit()
     else:
         t_id = t_id[0]
-    
+
 
 def update_source(collector):
     data.driver.get(collector.base_url)
@@ -57,11 +59,12 @@ def update_source(collector):
     for info in collector.get_links(data):
         update_title(collector, info)
         cnt += 1
-        
+
         if cnt == 200:
             fini_driver()
             init_driver()
             cnt = 0
+
 
 def update_all():
     init_db()
@@ -71,12 +74,15 @@ def update_all():
     fini_driver()
     fini_db()
 
+
 def init_driver():
     data.driver = Firefox()
+
 
 def fini_driver():
     data.driver.close()
     data.driver.quit()
+
 
 def init_db():
     data.db = sqlite3.connect(DATABASE)
@@ -90,8 +96,10 @@ def init_db():
                 )''')
     data.db.commit()
 
+
 def fini_db():
     data.db.close()
+
 
 data = SimpleNamespace()
 

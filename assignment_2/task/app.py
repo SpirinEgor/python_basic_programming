@@ -9,18 +9,22 @@ from common_db import DATABASE, convert_title
 app = Flask(__name__)
 CORS(app)
 
+
 def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect(DATABASE)
     return g.db
 
+
 @app.route('/scripts')
 def get_scripts():
     return send_file('scripts.js')
 
+
 @app.route('/')
 def get_index():
     return send_file('index.html')
+
 
 @app.route('/get/<text>/size')
 def get_size(text):
@@ -29,9 +33,11 @@ def get_size(text):
                            WHERE title LIKE "%{convert_title(text)}%" ''')
     return json.dumps({'size': db_cursor.fetchone()[0]})
 
+
 @app.route('/get/size')
 def get_full_size():
     return get_size('')
+
 
 @app.route('/get/<text>/<count>/<offset>')
 def get_titles(text, count, offset):
@@ -59,9 +65,11 @@ def get_titles(text, count, offset):
 
     return json.dumps(dicts)
 
+
 @app.route('/get/<count>/<offset>')
 def get_all_titles(count, offset):
     return get_titles('', count, offset)
+
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -71,6 +79,7 @@ def close_connection(exception):
     driver = g.pop('_driver', None)
     if driver is not None:
         driver.close()
+
 
 if __name__ == '__main__':
     app.run()

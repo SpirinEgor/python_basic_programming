@@ -3,6 +3,8 @@ import re
 from types import SimpleNamespace
 
 base_url = 'https://fanfox.net'
+volume_re = re.compile(r'v(\d)+')
+chapter_re = re.compile(r'c(\d)+')
 
 def get_links(data):
     catalog_url = base_url + '/directory/?news'
@@ -33,9 +35,6 @@ def get_links(data):
 
         for info in elems:
             yield info
-
-volume_re = re.compile(r'v(\d)+')
-chapter_re = re.compile(r'c(\d)+')
 
 def get_chapters(page):
     try:

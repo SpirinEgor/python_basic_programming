@@ -2,6 +2,9 @@ import re
 from types import SimpleNamespace
 
 base_url = 'https://manga-chan.me/'
+title_re = re.compile(r'\(')
+volume_re = re.compile(r'v(\d)+')
+chapter_re = re.compile(r'- (\d)+(.(\d)+)?')
 
 def get_links(data):
     catalog_url = base_url + '/mostfavorites?offset='
@@ -16,7 +19,7 @@ def get_links(data):
             info = SimpleNamespace()
 
             title_link = elem.find_element_by_class_name('title_link')
-            
+
             info.title = title_re.split(title_link.text)[0][:-1]
             info.link  = title_link.get_attribute('href')
             info.cover = elem.find_element_by_tag_name('img').get_attribute('src')
@@ -30,10 +33,6 @@ def get_links(data):
 
         for info in elems:
             yield info
-
-title_re = re.compile(r'\(')
-volume_re = re.compile(r'v(\d)+')
-chapter_re = re.compile(r'- (\d)+(.(\d)+)?')
 
 def get_chapters(page):
     chapters = []

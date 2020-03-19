@@ -1,87 +1,124 @@
+"use strict";
+
 $(document).ready(() => {
-    let changer = async () => {
-        search_string = $('#search').val()
+    window.row_class_no_act = 'list-group-item d-flex justify-content-between align-items-center'
+    window.row_class = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center'
 
-        page_size = 20
-        page_no = 1
-        table_size = 0
+    let pager = `
+        <a class="${window.row_class_no_act} pager">
+            <span class="prev">Previous</span>
+            <span class="progress">No pages</span>
+            <span class="next">Next</span>
+        </a>
+    `
 
-        await $.getJSON(`/get/${search_string}/size`, json => {
-            table_size = json.size
+    $('body').html(`
+        <div class="container mt-5">
+        <input class="form-control form-control-lg" type="text" placeholder="Search" id='search'>
+        <div class="container mt-5">
+            <div class="list-group">
+                ${pager}
+                <div class='title-list'></div>
+                ${pager}
+            </div>
+        </div>
+        <div class="mt-5"></div>
+        </div>
+    `)
+
+    let change_page_size = size => {
+        window.page_size = size
+
+        let list = $(`<div class="title-list"></div>`)
+
+        let row = `
+            <div class="title-row">
+                <a class="${window.row_class} title-info">
+                    <span><img height=100px class="title-img"></span>
+                    <span style="color:black" class="title-name"></span>
+                    <span class="badge badge-primary badge-pill title-count"></span>
+                </a>
+                <div style="display:none" class="title-chapters"></div>
+            </div>
+        `
+
+        for (let i = 0; i < size; i++) {
+            list.append(row)
+        }
+
+        list.find('.title-info').each((index, elem) => {
+            $(elem).click(() => {
+                $(elem).toggleClass('active')
+                $(elem).siblings().toggle('display')
+            })
         })
 
-        pages_cnt = Math.trunc(table_size / page_size)
-        if (table_size % page_size != 0)
-            pages_cnt += 1
+        $('.title-list').replaceWith(list)
 
-        draw_table()
+        changer()
     }
 
+    let changer = () => {
+        window.search_string = $('#search').val()
+
+        window.page_no = 1
+        window.table_size = 0
+
+        $.getJSON(`/get/${window.search_string}/size`, json => {
+            window.table_size = json.size
+
+            window.pages_cnt = Math.ceil(window.table_size / window.page_size)
+
+            draw_table()
+        })
+    }
+
+    $('.next').click(() => {
+        if (window.pages_cnt > window.page_no) {
+            window.page_no++
+            draw_table()
+        }
+    })
+
+    $('.prev').click(() => {
+        if (0 < window.page_no) {
+            window.page_no--
+            draw_table()
+        }
+    })
+
     $('#search').change(changer)
+
+    change_page_size(20)
     changer()
 });
 
 let draw_table = () => {
+    $('.progress').html(`${window.page_no} / ${window.pages_cnt}`)
     $('#list').html('')
 
-    pager = $(`<a class="list-group-item d-inline-flex justify-content-between align-items-center"></a>`)
-    prev = $(`<span class="">Previous</span>`)
-    next = $(`<span class="">Next</span>`)
-    progress = $(`<span class="">${page_no} / ${pages_cnt}</span>`)
+    $.getJSON(`/get/${window.search_string}/${window.page_size}/${window.page_no * window.page_size - window.page_size}`, draw_json)
+}
 
-    pager.append(prev)
-    pager.append(progress)
-    pager.append(next)
-    
-    next.click(() => {
-        if (pages_cnt > page_no) {
-            page_no++
-            draw_table()
+let draw_json = json => {
+    $('.title-row').each((index, elem) => {
+        let info = json[index]
+
+        $(elem).find('.title-img').attr('src', info.cover)
+        $(elem).find('.title-name').html(info.title)
+        $(elem).find('.title-count').html(info.chapters.length)
+
+        let chapters = $(`<div style="display:none" class="title-chapters"></div>`)
+
+        for (let chapter of info.chapters) {
+            let ch_el = $(`
+                <a class="${window.row_class}" href="${chapter.link}" style="color:black">
+                    Volume ${chapter.volume} Chapter ${chapter.chapter}
+                </a>
+            `)
+            chapters.append(ch_el)
         }
-    })
-    
-    prev.click(() => {
-        if (0 < page_no) {
-            page_no--
-            draw_table()
-        }
-    })
 
-    $('#list').append(pager)
-
-    $.getJSON(`/get/${search_string}/${page_size}/${page_no * page_size - page_size}`, json => {
-        $.each(json, (_, val) => {
-            let row_elem = $(`<div></div>`)
-            let base = $(`<a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"></a>`)
-            let chapters = $(`<div></div>`)
-            chapters.hide()
-
-            base.click(e => {
-                base.toggleClass('active')
-                chapters.toggle('display')
-            })
-
-            img = $(`<span><img src="${val.cover}" height=100px></span>`)
-            link = $(`<span> ${val.title} </span>`)
-            //link.attr('href', val.link)
-            link.css('color', 'black')
-            base.append(img)
-            base.append(link)
-            base.append(`<span class="badge badge-primary badge-pill">${val.chapters.length}</span>`)
-
-            for (chapter of val.chapters) {
-                let ch_el = $(`<a
-                    class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                    href="${chapter.link}">
-                    Volume ${chapter.volume} Chapter ${chapter.chapter}</a>`)
-                ch_el.css('color', 'black')
-                chapters.append(ch_el)
-            }
-
-            row_elem.append(base)
-            row_elem.append(chapters)
-
-            $('#list').append(row_elem);
-        })
+        $(elem).find('.title-chapters').replaceWith(chapters)
     })
 }

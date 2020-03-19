@@ -1,13 +1,17 @@
 import json
+import re
 import sqlite3
 
-from flask import Flask, g, request
+import requests
+from bs4 import BeautifulSoup
+from flask import Flask, g
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
 DATABASE = 'my_database.sqlite'
+app.secret_key = "super secret key"
 
 
 def get_db():
@@ -22,10 +26,14 @@ def init_db():
         db = get_db()
         cursor = db.cursor()
         cursor.executescript(
-            """CREATE TABLE IF NOT EXISTS Users
-               (id integer primary key, name text not null,
-               surname text not null, age integer)"""
+            """CREATE TABLE IF NOT EXISTS Items
+               (id integer primary key,
+               name text not null,
+               brand text not null,
+               site text not null,
+               price integer)"""
         )
+        cursor.executescript("""DELETE FROM Items""")
         db.commit()
 
 
@@ -33,22 +41,61 @@ def init_db():
 def get_all():
     db_cursor = get_db().cursor()
     db_cursor.row_factory = sqlite3.Row
-    db_cursor.execute("SELECT * From Users")
+    db_cursor.execute("SELECT * From Items")
     result = db_cursor.fetchall()
     json_result = json.dumps([dict(row) for row in result])
     return json_result
 
 
-@app.route('/new_user', methods=['POST'])
-def create_new_user():
-    user_json = request.get_json()
-    for key in ['name', 'surname', 'age']:
-        assert key in user_json, f'{key} not found in the request'
-    query = f"INSERT INTO Users (name, surname, age) VALUES ('{user_json['name']}', '{user_json['surname']}', {user_json['age']});"
+def create_new_item(data, site):
     db_conn = get_db()
-    db_conn.execute(query)
+    for i in data:
+        user_json = json.loads(i)
+        try:
+            for key in ['shortName', 'brandName', 'price']:
+                assert key in user_json, f'{key} not found in the request'
+            query = f"INSERT INTO Items (name, brand, site, price) VALUES ('{user_json['shortName']}', '{user_json['brandName']}', '{site}', {user_json['price']});"
+            db_conn.execute(query)
+        except AssertionError:
+            continue
     db_conn.commit()
-    db_conn.close()
+
+
+def parse_citilink():
+    citilink = "https://www.citilink.ru/catalog/mobile/smartfony/-premium/?available=1&status=55395790&p=2"
+    r = requests.get(citilink)
+    html = r.content
+    soup = BeautifulSoup(html, "lxml")
+    data = [item['data-params'] for item in soup.find_all('div', attrs={'data-params': True})]
+    create_new_item(data, 'Citilink')
+
+
+def parse_wildberries():
+    wildberries = "https://www.wildberries.ru/catalog/0/search.aspx?search=%D0%BC%D1%83%D0%B6%D1%81%D0%BA%D0%B8%D0%B5%20%D1%87%D0%B5%D1%80%D0%BD%D1%8B%D0%B5%20%D0%B4%D0%B6%D0%B8%D0%BD%D1%81%D1%8B&sort=popular"
+    r = requests.get(wildberries)
+    html = r.content
+    soup = BeautifulSoup(html, "lxml")
+    data = list()
+    names = map(lambda x: x.string, soup.find_all('span', class_="goods-name"))
+    brand_names = map(lambda x: x.contents[0], soup.find_all("strong", {"class": "brand-name"}))
+    prices = map(lambda x: re.sub("\D", "", x.string), soup.find_all("ins", class_='lower-price'))
+    for name, brand_name, price in zip(names, brand_names, prices):
+        name = name.replace('"', "")
+        brand_name = brand_name.replace("'", "")
+        json_model = f'{{"shortName":" {name} ","brandName": " {brand_name} ", "price": {price} }}'
+        data.append(json_model)
+    create_new_item(data, 'Wildberries')
+
+
+@app.route('/parse_wildberries', methods=['POST'])
+def add_parser_wildberries():
+    parse_wildberries()
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+
+
+@app.route('/parse_citilink', methods=['POST'])
+def add_parser_citilink():
+    parse_citilink()
     return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 

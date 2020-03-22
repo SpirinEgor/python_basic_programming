@@ -1,5 +1,18 @@
 $(document).ready(function () {
     draw_table()
+    document.getElementById('load-src1').onclick = function(){
+        document.getElementById('load-src1').style.background = "red";
+        postFromSrc("http://127.0.0.1:5000/src_1");
+    }
+    document.getElementById('load-src2').onclick = function(){
+        postFromSrc("http://127.0.0.1:5000/src_2");
+    }
+    document.getElementById('load-src3').onclick = function(){
+        postFromSrc("http://127.0.0.1:5000/src_3"); 
+    }
+    document.getElementById('delete-all').onclick = function(){
+        postFromSrc("http://127.0.0.1:5000/delete_all");
+    }
 });
 
 function draw_table() {
@@ -15,3 +28,11 @@ function draw_table() {
     });
 }
 
+function postFromSrc(url) {
+    let promise = new Promise(function(resolve, reject) {
+        $.get( url, function( data ) {
+            draw_table()
+            document.getElementById('load-src1').style.background = "#007bff";
+          });
+    });
+}

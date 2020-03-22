@@ -4,18 +4,25 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <title>Basic client</title>
+    <title>Gifts aggregator</title>
 </head>
 <body>
 
+<h1 class="display-1 mt-5 text-center">Gift for a girlfriend aggregator</h1>
+<div class="container mt-5 text-center">
+    <button id="load-src1" class="btn btn-primary mr-5">Load from funfrom.me</button>
+    <button id="load-src2" class="btn btn-primary mr-5">Load from 2cherry.ru</button>    
+    <button id="load-src3" class="btn btn-primary mr-5">Load from podarki.ru</button>
+    <button id="delete-all" class="btn btn-secondary">CLEAR ALL</button>
+
 <div class="container-fluid mt-5">
-    <table class="table table-hover">
+    <table style="table-layout: fixed; word-wrap: break-word;" class="table table-hover">
         <thead class="thead-dark">
         <tr>
-            <th scope="col">Id</th>
-            <th scope="col">Name</th>
-            <th scope="col">Price</th>
-            <th scope="col">Link</th>
+            <th scope="col" style="width: 10%;">Id</th>
+            <th scope="col" style="width: 25%;">Name</th>
+            <th scope="col" style="width: 20%">Price</th>
+            <th scope="col" style="width: 45%;">Link</th>
         </tr>
         </thead>
         <tbody id="table_body">

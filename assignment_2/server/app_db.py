@@ -14,6 +14,15 @@ CORS(app)
 
 DATABASE = 'my_database.sqlite'
 
+list = ['https://www.casatualondon.com/?utm_source=tripadvisor&utm_medium=referral',
+        'https://dunord.spb.ru/',
+        'http://www.fvolchek.ru/',
+        'https://king-pyshka.ru/',
+        'https://www.epicpies.co.uk/?utm_source=tripadvisor&utm_medium=referral',
+        'https://www.kartoshka.com',
+        'https://vk.com/lecafeveranda',
+        'https://www.cofix.ru']
+
 
 def get_db():
     db_conn = getattr(g, '_database', None)
@@ -32,14 +41,8 @@ def init_db():
                name text not null,
                description text)"""
         )
-        add_new_cafe('https://www.casatualondon.com/?utm_source=tripadvisor&utm_medium=referral')
-        add_new_cafe('https://dunord.spb.ru/')
-        add_new_cafe('http://www.fvolchek.ru/')
-        add_new_cafe('https://king-pyshka.ru/')
-        add_new_cafe('https://www.epicpies.co.uk/?utm_source=tripadvisor&utm_medium=referral')
-        add_new_cafe('https://www.kartoshka.com')
-        add_new_cafe('https://vk.com/lecafeveranda')
-        add_new_cafe('https://www.cofix.ru')
+        for url in list:
+            add_new_cafe(url)
         db.commit()
 
 
@@ -51,15 +54,15 @@ def add_new_cafe(url):
     lang = chardet.detect(name.encode('cp1251'))
     lang = lang.get('language')
     name = transliterate.translit(name, "ru", reversed = True if lang != ' ' else False)
-    descr = soup.find('meta', attrs={'name':'description'})['content']
-    descr = transliterate.translit(descr, "ru", reversed = True if lang != ' ' else False)
+    description = soup.find('meta', attrs={'name':'description'})['content']
+    description = transliterate.translit(description, "ru", reversed = True if lang != ' ' else False)
     db_conn = get_db()
     cursor = db_conn.cursor()
     cursor.execute(f"SELECT id FROM Cafes WHERE name =\"{name}\";")
     if cursor.fetchone():
-        cursor.execute(f"UPDATE Cafes SET description = \"{descr}\" WHERE name =\"{name}\";")
+        cursor.execute(f"UPDATE Cafes SET description = \"{description}\" WHERE name =\"{name}\";")
     else:
-        cursor.execute(f"INSERT INTO Cafes (name, description) VALUES (\"{name}\", \"{descr}\");")
+        cursor.execute(f"INSERT INTO Cafes (name, description) VALUES (\"{name}\", \"{description}\");")
     db_conn.commit()
 
 

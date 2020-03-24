@@ -43,26 +43,26 @@ def get_all():
 @app.route('/new_year', methods=['POST'])
 def create_new_year():
     user_json = request.get_json()
-    assert 'year' in user_json, f'Year not found in the request'
-    addr = "https://ru.wikipedia.org/wiki/"+user_json['year']+"_год"
+    assert 'year' in user_json, "Year not found in the request"
+    addr = f"https://ru.wikipedia.org/wiki/{user_json['year']}_год"
     wiki = requests.get(addr)
     html = wiki.content
     soup = BeautifulSoup(html, 'html.parser')
-    Facts = []
-    div = soup.find(attrs={"class" : "mw-parser-output"})
+    facts = []
+    div = soup.find(attrs={"class": "mw-parser-output"})
     ul = div.find_all('ul')
     for tag in ul[1].find_all('li'):
-            if (tag.attrs.get("class") == None):
-                Facts.append(tag.get_text())
+        if (tag.attrs.get("class") is None):
+            facts.append(tag.get_text())
     db_conn = get_db()
     db_conn.execute("DELETE From Facts")
-    for facts in Facts:
-        query = f"INSERT INTO Facts (fact) VALUES ('{facts}');"
+    for fact in facts:
+        query = f"INSERT INTO facts (fact) VALUES ('{fact}');"
         db_conn.execute(query)
-        
     db_conn.commit()
     db_conn.close()
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    return json.dumps({'success': True}), 200, {'ContentType':
+                                                'application/json'}
 
 
 @app.teardown_appcontext

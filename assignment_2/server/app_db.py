@@ -14,14 +14,14 @@ CORS(app)
 
 DATABASE = 'my_database.sqlite'
 
-list = ['https://www.casatualondon.com/?utm_source=tripadvisor&utm_medium=referral',
-        'https://dunord.spb.ru/',
-        'http://www.fvolchek.ru/',
-        'https://king-pyshka.ru/',
-        'https://www.epicpies.co.uk/?utm_source=tripadvisor&utm_medium=referral',
-        'https://www.kartoshka.com',
-        'https://vk.com/lecafeveranda',
-        'https://www.cofix.ru']
+listOfCafes = ['https://www.casatualondon.com/?utm_source=tripadvisor&utm_medium=referral',
+               'https://dunord.spb.ru/',
+               'http://www.fvolchek.ru/',
+               'https://king-pyshka.ru/',
+               'https://www.epicpies.co.uk/?utm_source=tripadvisor&utm_medium=referral',
+               'https://www.kartoshka.com',
+               'https://vk.com/lecafeveranda',
+               'https://www.cofix.ru']
 
 
 def get_db():
@@ -41,9 +41,15 @@ def init_db():
                name text not null,
                description text)"""
         )
-        for url in list:
+        for url in listOfCafes:
             add_new_cafe(url)
         db.commit()
+
+
+def add_cafes():
+    with app.app_context():
+        for url in listOfCafes:
+            add_new_cafe(url)
 
 
 def add_new_cafe(url):
@@ -53,9 +59,9 @@ def add_new_cafe(url):
     name = soup.title.string.split(' - ')[0].split(' | ')[0]
     lang = chardet.detect(name.encode('cp1251'))
     lang = lang.get('language')
-    name = transliterate.translit(name, "ru", reversed = True if lang != ' ' else False)
-    description = soup.find('meta', attrs={'name':'description'})['content']
-    description = transliterate.translit(description, "ru", reversed = True if lang != ' ' else False)
+    name = transliterate.translit(name, "ru", reversed=True if lang != ' ' else False)
+    description = soup.find('meta', attrs={'name': 'description'})['content']
+    description = transliterate.translit(description, "ru", reversed=True if lang != ' ' else False)
     db_conn = get_db()
     cursor = db_conn.cursor()
     cursor.execute(f"SELECT id FROM Cafes WHERE name =\"{name}\";")
@@ -85,4 +91,5 @@ def close_connection(exception):
 
 if __name__ == '__main__':
     init_db()
+    add_cafes()
     app.run()

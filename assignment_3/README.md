@@ -32,3 +32,16 @@ conda install -c conda-forge opencv
 - D ‒ уменьшенная в 4 раза и пропущенная через гаусовский фильтр (Gaussian filtering)
 - E ‒ уменьшенная в 4 раза и обработанная ядром, заданным вручную (сами выберите какое)
 - F ‒ каждая ячейка имеет случайный цвет.
+
+## Домашнее задание
+
+В качестве домашнего задания предлагается реализовать сервис по обработке изображения. Клиентская часть предоставляет форму загруки изображения, а так же отображение до и после обработки. Серверная часть должна принимать картинку, обрабатывать одним из далее описанным алгоритмом и возвращать обратно.
+
+Возможные алгоритмы обработки изображения:
+
+- Image Сolorization ([tutorial](https://www.learnopencv.com/convolutional-neural-network-based-image-colorization-using-opencv/))
+- Human Pose Estimation ([tutorial](https://www.learnopencv.com/deep-learning-based-human-pose-estimation-using-opencv-cpp-python/))
+- Face Swapping ([tutorial](https://www.learnopencv.com/face-swap-using-opencv-c-python/))
+- Object Detection ([tutorial](https://www.learnopencv.com/deep-learning-based-object-detection-using-yolov3-with-opencv-python-c/))
+
+На каждый алгоритм допустимо не более 5 человек. Вы также можете реализовать свой алгоритм, предварительно обсудив со мной.

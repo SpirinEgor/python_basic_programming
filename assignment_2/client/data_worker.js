@@ -1,19 +1,21 @@
+buttonNames = ['load-gifts-funfrom.me',
+                'load-gifts-2cherry.ru',
+                'load-gifts-podarki.ru',
+                'delete-all'];
+
 $(document).ready(function () {
-    draw_table()
-    document.getElementById('load-src1').onclick = function(){
-        document.getElementById('load-src1').style.background = "red";
-        postFromSrc("http://127.0.0.1:5000/src_1");
-    }
-    document.getElementById('load-src2').onclick = function(){
-        postFromSrc("http://127.0.0.1:5000/src_2");
-    }
-    document.getElementById('load-src3').onclick = function(){
-        postFromSrc("http://127.0.0.1:5000/src_3"); 
-    }
-    document.getElementById('delete-all').onclick = function(){
-        postFromSrc("http://127.0.0.1:5000/delete_all");
+    draw_table();
+    for (let name of buttonNames) {
+        setup_button(name)
     }
 });
+
+function setup_button(name) {
+    document.getElementById(name).onclick = function () {
+        document.getElementById(name).style.background = "red";
+        postFromSrc("http://127.0.0.1:5000/" + name);
+    };
+}
 
 function draw_table() {
     $('#table_body tr').remove()
@@ -21,6 +23,9 @@ function draw_table() {
         $.each(data, function (key, val) {
             let row = "";
             $.each(val, function (key, val) {
+                if (typeof(val) == "string" && val.trim().startsWith("http")) {
+                    val = "<a href=" + val + ">" + val + "</a>"
+                }
                 row += '<td>' + val + '</td>';
             });
             $('#table_body').append('<tr>' + row + '</tr>');
@@ -29,10 +34,12 @@ function draw_table() {
 }
 
 function postFromSrc(url) {
-    let promise = new Promise(function(resolve, reject) {
-        $.get( url, function( data ) {
+    let promise = new Promise(function (resolve, reject) {
+        $.get(url, function (data) {
             draw_table()
-            document.getElementById('load-src1').style.background = "#007bff";
-          });
+            for (let name of buttonNames) {
+                document.getElementById(name).style.background = "#007bff";
+            }
+        });
     });
 }

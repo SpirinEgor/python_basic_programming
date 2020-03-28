@@ -1,11 +1,10 @@
 import json
-import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import os
 import base64
 
-from flask import Flask, g, request, send_file
+from flask import Flask, g, request, send_from_directory
 from flask_cors import CORS
 
 
@@ -17,6 +16,16 @@ def show_image(image):
 
 this_app = Flask(__name__)
 CORS(this_app)
+
+
+@this_app.route('/')
+def return_html():
+    return send_from_directory('client', 'index.html')
+
+
+@this_app.route('/js')
+def return_js():
+    return send_from_directory('client', "data_worker.js")
 
 
 @this_app.route('/handle_img', methods=['POST'])
@@ -35,7 +44,8 @@ def handle_img():
     with open(path, "rb") as image_file:
         encoded_string = base64.b64encode(image_file.read())
     os.remove(path)
-    return json.dumps({'success': True, 'image': encoded_string.decode('utf-8')}), 200, {'ContentType': 'application/json'}
+    return json.dumps({'success': True, 'image': encoded_string.decode('utf-8')}), 200, {
+        'ContentType': 'application/json'}
 
 
 if __name__ == '__main__':

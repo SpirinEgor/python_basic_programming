@@ -35,7 +35,7 @@ function handleFile() {
             img.classList.add("obj");
             img.height = 300;
             img.width = 250;
-            img.style = "display: block";
+            img.class = "img-fluid";
             img.src = "data:image/png;base64," + base64_img;
             document.getElementById('cont').appendChild(img);
         }
@@ -44,19 +44,14 @@ function handleFile() {
     });
 }
 
-function toHexString(byteArray) {
-    return Array.from(byteArray, function (byte) {
-        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-    }).join('')
-}
-
 function showOriginalImage(file) {
+    document.getElementById('cont').innerHTML = "";
     var img = document.createElement("img");
     img.classList.add("obj");
     img.file = file;
-    img.height = 150;
-    img.width = 150;
-    img.style = "display: block"
+    img.height = 300;
+    img.width = 250;
+    img.class = "img-fluid";
     document.getElementById('cont').appendChild(img);
     var reader = new FileReader();
     reader.onload = (function (aImg) {

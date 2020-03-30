@@ -41,8 +41,6 @@ def init_db():
                name text not null,
                description text)"""
         )
-        for url in listOfCafes:
-            add_new_cafe(url)
         db.commit()
 
 

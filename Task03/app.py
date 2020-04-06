@@ -19,16 +19,17 @@ def allowed_file(filename):
 
 
 def change_file(filename):
-    protoFile = "./models/colorization_deploy_v2.prototxt"
-    weightsFile = "./models/colorization_release_v2.caffemodel"
+    proto_file = "./models/colorization_deploy_v2.prototxt"
+    weights_file = "./models/colorization_release_v2.caffemodel"
     frame = cv2.imread(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     W_in = 224
     H_in = 224
-    net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
+    net = cv2.dnn.readNetFromCaffe(proto_file, weights_file)
     pts_in_hull = np.load('./pts_in_hull.npy')
     pts_in_hull = pts_in_hull.transpose().reshape(2, 313, 1, 1)
     net.getLayer(net.getLayerId('class8_ab')).blobs = [pts_in_hull.astype(np.float32)]
-    net.getLayer(net.getLayerId('conv8_313_rh')).blobs = [np.full([1, 313], 2.606, np.float32)]
+    net.getLayer(net.getLayerId('conv8_313_rh')).blobs = [np.full([1, 313],
+                                                          2.606, np.float32)]
     img_rgb = (frame[:, :, [2, 1, 0]] * 1.0 / 255).astype(np.float32)
     img_lab = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2Lab)
     img_l = img_lab[:, :, 0]
@@ -61,8 +62,10 @@ def upload_file():
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-              integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet"
+              href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+              integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+              crossorigin="anonymous">
         <title>Upload new File</title>
     </head>
     <body>
@@ -85,8 +88,11 @@ def uploaded_file(filename):
 
 
 if __name__ == '__main__':
-    os.system('sudo chmod a+x getModels.sh')
-    os.system('./getModels.sh')
+    if (not os.path.exists('models/colorization_deploy_v2.prototxt') or
+            not os.path.exists('models/colorization_deploy_v2.prototxt') or
+            not os.path.exists('pts_in_hull.npy')):
+        os.system('sudo chmod a+x getModels.sh')
+        os.system('./getModels.sh')
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
     app.run()

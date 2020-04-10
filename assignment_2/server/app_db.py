@@ -29,20 +29,39 @@ def init_db():
                menuItem text not null, link text not null)"""
         )
 
+        db.commit()
+
+
+def fill_spbu():
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+
         spbu = requests.get('https://spbu.ru/news-events')
         spbu_html = spbu.content
         spbu_soup = BeautifulSoup(spbu_html, 'html.parser')
         for item in spbu_soup.find_all('li', {"class": "menu-item"}):
-            cursor.execute("""INSERT INTO University (university, menuItem, link) VALUES(?,?,?);""",
-                   ("SPBU", item.a.text, item.a['href']))
+            cursor.execute("""INSERT INTO University
+                           (university, menuItem, link) VALUES(?,?,?);""",
+                           ("SPBU", item.a.text, item.a['href']))
+
+        db.commit()
+
+
+def fill_msu():
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
 
         msu = requests.get('https://www.msu.ru/')
         msu_html = msu.content
         msu_soup = BeautifulSoup(msu_html, 'html.parser')
         ul = msu_soup.find_all('ul', {"class": "nav"})[0]
         for item in ul.find_all('a'):
-            cursor.execute("""INSERT INTO University (university, menuItem, link) VALUES(?,?,?);""",
-                   ("MSU", item.text, item['href']))
+            cursor.execute("""INSERT INTO University
+                           (university, menuItem, link) VALUES(?,?,?);""",
+                           ("MSU", item.text, item['href']))
+
         db.commit()
 
 
@@ -55,6 +74,7 @@ def get_all():
     json_result = json.dumps([dict(row) for row in result])
     return json_result
 
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
@@ -64,4 +84,7 @@ def close_connection(exception):
 
 if __name__ == '__main__':
     init_db()
+    fill_spbu()
+    fill_msu()
     app.run()
+

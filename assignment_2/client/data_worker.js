@@ -7,51 +7,36 @@ function draw_table() {
     $.getJSON('http://127.0.0.1:5000/get_all', function (data) {
         $.each(data, function (key, val) {
             let row = "";
+            spbu_identifier = 0
+            msu_identifier = 10
+            identifier = -1
             $.each(val, function (key, val) {
+                if (val == "SPBU")
+                    identifier = spbu_identifier
+
+                if (val == "MSU")
+                    identifier = msu_identifier
+
+                identifier++
+                if (identifier == spbu_identifier + 3){
+                    if (val.startsWith("/"))
+                        val = "https://spbu.ru" + val
+                    if (val.slice(-1) == '/')
+                        val = val.slice (0, -1)
+                    val = "<a href=" + val + ">" + val + "</a>"
+                }
+
+                if (identifier == msu_identifier + 3){
+                    if (val.startsWith("/"))
+                        val = "https://msu.ru" + val
+                    if (val.slice(-1) == '/')
+                        val = val.slice (0, -1)
+                    val = "<a href=" + val + ">" + val + "</a>"
+                }
+                
                 row += '<td>' + val + '</td>';
             });
             $('#table_body').append('<tr>' + row + '</tr>');
         });
     });
-}
-
-
-function processForm(e) {
-    if (e.preventDefault) e.preventDefault();
-    let user_info = $('#form').serializeArray().reduce(function (obj, item) {
-        obj[item.name] = item.value;
-        return obj;
-    }, {});
-    let promise = new Promise(function(resolve, reject) {
-        $.ajax({
-            type: "POST",
-            contentType: "application/json; charset=utf-8",
-            url: "http://127.0.0.1:5000/new_user",
-            data: JSON.stringify(user_info),
-            dataType: "json",
-            success: function (data) {
-                resolve(data);
-            },
-            error: function (err) {
-                reject(err);
-            }
-        });
-    });
-
-    promise.then(function (_) {
-        draw_table();
-    }).catch(function (err) {
-        console.log("can't add new user: " + err);
-    })
-
-    // request.always(function (data) {
-    //     draw_table();
-    // });
-}
-
-const form = document.getElementById('form');
-if (form.attachEvent) {
-    form.attachEvent("submit", processForm);
-} else {
-    form.addEventListener("submit", processForm);
 }

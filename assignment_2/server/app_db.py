@@ -6,10 +6,12 @@ from bs4 import BeautifulSoup
 from flask import Flask, g, request
 from flask_cors import CORS
 
+
 app = Flask(__name__)
 CORS(app)
 
 DATABASE = 'my_database.sqlite'
+products = []
 
 
 def get_db():
@@ -25,30 +27,42 @@ def init_db():
         cursor = db.cursor()
         cursor.executescript(
             """CREATE TABLE IF NOT EXISTS Products
-               (id integer primary key, shop text not null,
-               name text not null)"""
+            (id integer primary key,
+            shop text not null,
+            name text not null)"""
         )
 
-        Products = []
+        db.commit()
 
-        xiaomi = requests.get('https://www.mi.com/ru/list/')
-        mi_soup = BeautifulSoup(xiaomi.content, 'html.parser')
-        mi_products = mi_soup.find_all('a', {"class": "product-name"})
-        for prod in mi_products:
-            if not prod.text.startswith("https://www.mi.com/ru/list/"):
-                Products.append(('Xiaomi', prod.text))
 
-        ozon = requests.get('https://www.svyaznoy.ru/catalog/phone/225')
-        oz_soup = BeautifulSoup(ozon.content, 'html.parser')
-        oz_products = oz_soup.find_all('div', {"class": "s-menu-el"})
-        for prod in oz_products:
-            if prod.a.get('href').startswith("/catalog/phone/225/"):
-                Products.append(('Ozon', prod.a.text))
+def add_xiaomi():
+    xiaomi = requests.get('https://www.mi.com/ru/list/')
+    mi_soup = BeautifulSoup(xiaomi.content, 'html.parser')
+    mi_products = mi_soup.find_all('a', {"class": "product-name"})
+    for prod in mi_products:
+        if not prod.text.startswith("https://www.mi.com/ru/list/"):
+            products.append(('Xiaomi', prod.text))
 
-        for prods in Products:
-            print(prods[1])
-            cursor.execute("""INSERT INTO Products (shop,name) VALUES(?,?);""",
-                           (prods[0], prods[1]))
+
+def add_ozon():
+    ozon = requests.get('https://www.svyaznoy.ru/catalog/phone/225')
+    oz_soup = BeautifulSoup(ozon.content, 'html.parser')
+    oz_products = oz_soup.find_all('div', {"class": "s-menu-el"})
+    for prod in oz_products:
+        if prod.a.get('href').startswith("/catalog/phone/225/"):
+            products.append(('Ozon', prod.a.text))
+
+
+def fill_bd():
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+
+        for prod in products:
+            print(prod[1])
+            cursor.execute(f"""INSERT INTO Products
+                (shop,name) VALUES
+                ('{prod[0]}', '{prod[1]}');""")
         db.commit()
 
 
@@ -71,4 +85,7 @@ def close_connection(exception):
 
 if __name__ == '__main__':
     init_db()
+    add_xiaomi()
+    add_ozon()
+    fill_bd()
     app.run()

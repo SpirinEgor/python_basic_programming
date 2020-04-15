@@ -12,8 +12,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 def pose_estimate(filename):
-    protoFile = "coco/pose_deploy_linevec.prototxt"
-    weightsFile = "coco/pose_iter_440000.caffemodel"
 
     threshold = 0.1
     in_width = 368
@@ -28,7 +26,9 @@ def pose_estimate(filename):
         [14, 16], [15, 17]
         ]
 
-    net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
+    proto_file = "coco/pose_deploy_linevec.prototxt"
+    weights_file = "coco/pose_iter_440000.caffemodel"
+    net = cv2.dnn.readNetFromCaffe(proto_file, weights_file)
     frame = cv2.imread(filename)
 
     inp_blob = cv2.dnn.blobFromImage(frame, 1.0 / 255, (in_width, in_height),

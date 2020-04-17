@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>Basic client</title>
+    <script language="javascript">
+    function show(){
+    window.alert("ok");
+    var a = document.getElementById('inputImage').value;
+    document.getElementById('Before').src=a;
+    document.getElementById('After').src=a+"_colorized.png";
+    window.alert("ok");
+    }
+    </script>
+</head>
+<body>
+
+<div class="container mt-5">
+    <form id="form">
+        <div class="form-group">
+            <label for="inputName">Name of image</label><br>
+            <input type="text" class="form-control" id="inputImage" name="image"
+                   placeholder="Enter name of Image">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+<button class="btn btn-primary" onclick="show()">Show result</button>
+<div id="Show">
+<img id="Before">
+<img id="After">
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+<script src="data_worker.js"></script>
+</body>
+</html>

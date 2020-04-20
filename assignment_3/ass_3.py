@@ -84,8 +84,8 @@ def colorize_image(filename):
     img_lab_out = np.concatenate((img_l[:, :, np.newaxis], ab_dec_us), axis=2)
     img_bgr_out = np.clip(cv.cvtColor(img_lab_out, cv.COLOR_Lab2BGR), 0, 1)
 
-    outputFile = 'colorized_' + filename
-    cv.imwrite(app.config['UPLOAD_FOLDER'] + '/' + outputFile,
+    output_file = 'colorized_' + filename
+    cv.imwrite(app.config['UPLOAD_FOLDER'] + '/' + output_file,
                (img_bgr_out*255).astype(np.uint8))
 
 

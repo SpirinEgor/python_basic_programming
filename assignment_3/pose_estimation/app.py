@@ -29,7 +29,8 @@ def pose_estimate(filename):
     proto_file = "coco/pose_deploy_linevec.prototxt"
     weights_file = "coco/pose_iter_440000.caffemodel"
     net = cv2.dnn.readNetFromCaffe(proto_file, weights_file)
-    frame = cv2.imread(filename)
+    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    frame = cv2.imread(path)
 
     inp_blob = cv2.dnn.blobFromImage(frame, 1.0 / 255, (in_width, in_height),
                                      (0, 0, 0), swapRB=False, crop=False)
@@ -37,17 +38,17 @@ def pose_estimate(filename):
 
     output = net.forward()
 
-    H = output.shape[2]
-    W = output.shape[3]
+    height = output.shape[2]
+    width = output.shape[3]
 
     points = []
 
     for i in range(n_points):
         prob_map = output[0, i, :, :]
 
-        minVal, prob, minLoc, point = cv2.minMaxLoc(prob_map)
-        x = (frame.shape[1] * point[0]) / W
-        y = (frame.shape[0] * point[1]) / H
+        min_val, prob, min_loc, point = cv2.minMaxLoc(prob_map)
+        x = (frame.shape[1] * point[0]) / width
+        y = (frame.shape[0] * point[1]) / height
 
         if prob > threshold:
             points.append((int(x), int(y)))
@@ -55,14 +56,14 @@ def pose_estimate(filename):
             points.append(None)
 
     for pair in pose_pairs:
-        partA = pair[0]
-        partB = pair[1]
-        if points[partA] and points[partB]:
-            cv2.line(frame, points[partA], points[partB], (0, 255, 255), 2)
-            cv2.circle(frame, points[partA], 8, (0, 0, 255),
+        part_a = pair[0]
+        part_b = pair[1]
+        if points[part_a] and points[part_b]:
+            cv2.line(frame, points[part_a], points[part_b], (0, 255, 255), 2)
+            cv2.circle(frame, points[part_a], 8, (0, 0, 255),
                        thickness=-1, lineType=cv2.FILLED)
 
-    cv2.imwrite(os.path.join(app.config['UPLOAD_FOLDER'], filename), frame)
+    cv2.imwrite(path, frame)
 
 
 def allowed_file(filename):

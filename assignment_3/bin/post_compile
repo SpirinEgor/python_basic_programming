@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# The post_compile hook is run by heroku-buildpack-python
+echo "-----> Running getModels"
+chmod +x obj_detection_yolo/getModels.sh
+obj_detection_yolo/getModels.sh
+
+echo "-----> Post-compile done"

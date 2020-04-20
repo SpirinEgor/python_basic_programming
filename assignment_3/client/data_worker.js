@@ -1,15 +1,19 @@
-var inputElement = document.getElementById("img-upload");
+const inputElement = document.getElementById("img-upload");
 inputElement.addEventListener("change", handleFile, false);
 
+
 function handleFile() {
-    var fileList = this.files;
+    const fileList = this.files;
 
     //add img to html
     showOriginalImage(fileList[0]);
 
     //send img to server
-    var formData = new FormData();
+    const formData = new FormData();
     formData.append("image", fileList[0]);
+
+    const pendingSpan = document.getElementById("pending");
+    pendingSpan.style.visibility = "visible";
 
     let promise = new Promise(function (resolve, reject) {
         $.ajax({
@@ -17,7 +21,7 @@ function handleFile() {
             contentType: false,
             processData: false,
             cache: false,
-            url: "http://127.0.0.1:5000/handle_img",
+            url: window.location.href + "handle_img",
             data: formData,
             success: function (data) {
                 resolve(data);
@@ -30,14 +34,15 @@ function handleFile() {
 
     promise.then(function (data) {
             console.log("got response");
-            base64_img = JSON.parse(data)['image'];
-            var img = document.createElement("img");
+            // const base64_img = JSON.parse(data)['image'];
+            const img = document.createElement("img");
             img.classList.add("obj");
-            img.height = 300;
-            img.width = 250;
+            img.height = 600;
+            img.width = 500;
             img.class = "img-fluid";
-            img.src = "data:image/png;base64," + base64_img;
+            img.src = window.location.href + 'uploaded_images/' + fileList[0].name;//img.src = "data:image/png;base64," + base64_img;
             document.getElementById('cont').appendChild(img);
+            pendingSpan.style.visibility = "hidden";
         }
     ).catch(function (err) {
         console.log("can't upload image: " + err);
@@ -46,14 +51,14 @@ function handleFile() {
 
 function showOriginalImage(file) {
     document.getElementById('cont').innerHTML = "";
-    var img = document.createElement("img");
+    const img = document.createElement("img");
     img.classList.add("obj");
     img.file = file;
-    img.height = 300;
-    img.width = 250;
+    img.height = 600;
+    img.width = 500;
     img.class = "img-fluid";
     document.getElementById('cont').appendChild(img);
-    var reader = new FileReader();
+    const reader = new FileReader();
     reader.onload = (function (aImg) {
         return function (e) {
             aImg.src = e.target.result;

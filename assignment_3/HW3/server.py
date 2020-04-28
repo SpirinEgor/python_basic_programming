@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route('/image', methods=['POST'])
 def colorization():
     image = request.files['image']
@@ -58,11 +59,11 @@ def colorization():
     </body>
     </html>
     '''
-    
+
 
 @app.route('/<filename>')
 def uploaded_file(filename):
-    return send_from_directory('',filename)
+    return send_from_directory('', filename)
 
 
 if __name__ == '__main__':

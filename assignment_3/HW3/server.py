@@ -19,8 +19,7 @@ def colorization(image):
     net = cv.dnn.readNetFromCaffe(proto_file, weights_file)
     pts = pts_in_hull.transpose().reshape(2, 313, 1, 1)
     net.getLayer(net.getLayerId('class8_ab')).blobs = [pts.astype(np.float32)]
-    net.getLayer(net.getLayerId('conv8_313_rh')).blobs =
-    [np.full([1, 313], 2.606, np.float32)]
+    net.getLayer(net.getLayerId('conv8_313_rh')).blobs = [np.full([1, 313], 2.606, np.float32)]
     W_in = 224
     H_in = 224
     img_rgb = (frame[:, :, [2, 1, 0]] * 1.0 / 255).astype(np.float32)
@@ -44,8 +43,7 @@ def new_picture():
     user_json = request.get_json()
     image = user_json['image']
     colorization(image)
-    return json.dumps({'success': True})
-    , 200, {'ContentType': 'application/json'}
+    return 1
 
 
 if __name__ == '__main__':

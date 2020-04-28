@@ -4,17 +4,23 @@ import numpy as np
 import cv2 as cv
 import os.path
 
-from flask import Flask, g, request
+
+from flask import Flask, g, redirect, request, url_for, send_from_directory
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 CORS(app)
 
-
-def colorization(image):
+@app.route('/image', methods=['POST'])
+def colorization():
+    image = request.files['image']
+    filename = secure_filename(image.filename)
+    print(filename)
+    image.save(filename)
     proto_file = "models/colorization_deploy_v2.prototxt"
     weights_file = "models/colorization_release_v2.caffemodel"
-    frame = cv.imread(image)
+    frame = cv.imread(filename)
     pts_in_hull = np.load('pts_in_hull.npy')
     net = cv.dnn.readNetFromCaffe(proto_file, weights_file)
     pts = pts_in_hull.transpose().reshape(2, 313, 1, 1)
@@ -33,17 +39,30 @@ def colorization(image):
     ab_dec_us = cv.resize(ab_dec, (W_orig, H_orig))
     img_lab_out = np.concatenate((img_l[:, :, np.newaxis], ab_dec_us), axis=2)
     img_bgr_out = np.clip(cv.cvtColor(img_lab_out, cv.COLOR_Lab2BGR), 0, 1)
-    outputFile = image+'_colorized.png'
+    outputFile = filename+'_colorized.png'
     cv.imwrite(outputFile, (img_bgr_out*255).astype(np.uint8))
     print('Done !!!')
+    return '''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="style.css">
+        <title>Basic client</title>
+    </head>
+    <body>
+    <div id="Show">
+        <img id="Before" src='''+filename+'''>
+        <img id="After" src='''+filename+'_colorized.png'+'''>
+    </div>
+    </body>
+    </html>
+    '''
+    
 
-
-@app.route('/image', methods=['POST'])
-def new_picture():
-    user_json = request.get_json()
-    image = user_json['image']
-    colorization(image)
-    return 1
+@app.route('/<filename>')
+def uploaded_file(filename):
+    return send_from_directory('',filename)
 
 
 if __name__ == '__main__':

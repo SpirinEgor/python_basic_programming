@@ -15,21 +15,14 @@
 <body>
 
 <div class="container mt-5">
-    <form id="form">
+    <form id="form" action='http://127.0.0.1:5000/image' method='post' enctype='multipart/form-data'>
         <div class="form-group">
             <label for="inputName">Name of image</label><br>
-            <input type="text" class="form-control" id="inputImage" name="image"
-                   placeholder="Enter name of Image">
+            <input type="file" id="inputImage" name="image">
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>
-<button class="btn btn-primary" onclick="show()">Show result</button>
-<div id="Show">
-<img id="Before">
-<img id="After">
-</div>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
-<script src="data_worker.js"></script>
 </body>
 </html>

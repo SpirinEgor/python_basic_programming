@@ -29,19 +29,13 @@ def init_db():
         )
         db.commit()
 
-def list_to_dict(list):
-    dict = {}
-    for (key, value) in list:
-        dict[key] = value
-    return dict
-
 def parse_row(row):
     return row.text.replace('\n', '').split(':', 1)
 
 def parse_block(block):
     return (
         block.find('span', 'profile_info_header').text,
-        list_to_dict(
+        dict(
             [
                 parse_row(row) for row in block.find_all('div', 'profile_info_row')
             ]
@@ -49,7 +43,7 @@ def parse_block(block):
     )
 
 def parse_profile(profile):
-    return list_to_dict(
+    return dict(
         [
             parse_block(block) for block in profile.find_all('div', 'profile_info_block')
         ]
@@ -81,13 +75,13 @@ def add_account():
     profile_short = html.find(id = 'profile_short')
     profile_full = html.find(id = 'profile_full')
     profile = bs4.BeautifulSoup(
-        '''<div class="profile_info_block">
+        f'''<div class="profile_info_block">
                 <div class="profile_info_header_wrap">
                     <span class="profile_info_header">Краткая информация</span>
-                </div>''' +
-                str(profile_short) +
-        '''</div>''' +
-        str(profile_full)
+                </div>
+                {profile_short}
+        </div>
+        {profile_full}'''
     )
     page_name = html.find('h1', 'page_name').text
     json_result = json.dumps(parse_profile(profile)).replace('\'', '')

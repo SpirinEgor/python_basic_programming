@@ -1,46 +1,64 @@
 import cv2
 import numpy as np
 
-def proto_file(model):
-    if model is "COCO":
-        return "pose/coco/pose_deploy_linevec.prototxt"
-    elif model is "MPI":
-        return "pose/mpi/pose_deploy_linevec_faster_4_stages.prototxt"
-    else:
-        return None
-
-def weights_file(model):
-    if model is "COCO":
-        return "pose/coco/pose_iter_440000.caffemodel"
-    elif model is "MPI":
-        return "pose/mpi/pose_iter_160000.caffemodel"
-    else:
-        return None
-
-def amount_points(model):
-    if model is "COCO":
-        return 18
-    elif model is "MPI":
-        return 15
-    else:
-        return None
+models = {
+    "COCO": {
+        "proto_file": "pose/coco/pose_deploy_linevec.prototxt",
+        "weights_file": "pose/coco/pose_iter_440000.caffemodel",
+        "amount_points": 18,
+        "pose_pairs": [
+            [1,0],
+            [1,2],
+            [1,5],
+            [2,3],
+            [3,4],
+            [5,6],
+            [6,7],
+            [1,8],
+            [8,9],
+            [9,10],
+            [1,11],
+            [11,12],
+            [12,13],
+            [0,14],
+            [0,15],
+            [14,16],
+            [15,17]
+        ]
+    },
+    "MPI": {
+        "proto_file": "pose/mpi/pose_deploy_linevec_faster_4_stages.prototxt",
+        "weights_file": "pose/mpi/pose_iter_160000.caffemodel",
+        "amount_points": 15,
+        "pose_pairs": [
+            [0,1],
+            [1,2],
+            [2,3],
+            [3,4],
+            [1,5],
+            [5,6],
+            [6,7],
+            [1,14],
+            [14,8],
+            [8,9],
+            [9,10],
+            [14,11],
+            [11,12],
+            [12,13]
+        ]
+    }
+}
 
 def pose_pairs(model):
-    if model is "COCO":
-        return [[1,0],[1,2],[1,5],[2,3],[3,4],[5,6],[6,7],[1,8],[8,9],[9,10],[1,11],[11,12],[12,13],[0,14],[0,15],[14,16],[15,17]]
-    elif model is "MPI":
-        return [[0,1],[1,2],[2,3],[3,4],[1,5],[5,6],[6,7],[1,14],[14,8],[8,9],[9,10],[14,11],[11,12],[12,13]]
-    else:
-        return None
+    return models[model]["pose_pairs"]
 
 def key_points(image, model):
     if model not in ["COCO", "MPI"]:
         return None
 
-    protoFile = proto_file(model)
-    weightsFile = weights_file(model)
-    nPoints = amount_points(model)
-    POSE_PAIRS = pose_pairs(model)
+    protoFile = models[model]["proto_file"]
+    weightsFile = models[model]["weights_file"]
+    amountPoints = models[model]["amount_points"]
 
     imageWidth = image.shape[1]
     imageHeight = image.shape[0]
@@ -62,7 +80,7 @@ def key_points(image, model):
 
     points = []
 
-    for i in range(nPoints):
+    for i in range(amountPoints):
         probMap = output[0, i, :, :]
         minVal, prob, minLoc, point = cv2.minMaxLoc(probMap)
         x = (imageWidth * point[0]) / W

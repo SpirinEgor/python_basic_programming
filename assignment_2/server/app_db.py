@@ -10,6 +10,7 @@ CORS(app)
 
 DATABASE = 'my_database.sqlite'
 
+
 def get_db():
     db_conn = getattr(g, '_database', None)
     if db_conn is None:
@@ -29,30 +30,37 @@ def init_db():
         )
         db.commit()
 
+
 def parse_row(row):
     return row.text.replace('\n', '').split(':', 1)
+
 
 def parse_block(block):
     return (
         block.find('span', 'profile_info_header').text,
         dict(
             [
-                parse_row(row) for row in block.find_all('div', 'profile_info_row')
+                parse_row(row)
+                for row in block.find_all('div', 'profile_info_row')
             ]
         )
     )
 
+
 def parse_profile(profile):
     return dict(
         [
-            parse_block(block) for block in profile.find_all('div', 'profile_info_block')
+            parse_block(block)
+            for block in profile.find_all('div', 'profile_info_block')
         ]
     )
+
 
 def row_to_json(row):
     res = dict(row)
     res['profile'] = json.loads(res['profile'])
     return res
+
 
 @app.route('/get_accounts')
 def get_accounts():
@@ -63,17 +71,23 @@ def get_accounts():
     json_result = json.dumps([row_to_json(row) for row in result])
     return json_result
 
-@app.route('/add_account')
+
+@app.route('/add_account', methods=["POST"])
 def add_account():
-    header = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:74.0) Gecko/20100101 Firefox/74.0'}
-    screen_name = request.args.get('screen_name', default = '', type = str)
+    header = {
+        'User-Agent':
+            'Mozilla/5.0 ' +
+            '(X11; Ubuntu; Linux x86_64; rv:74.0) ' +
+            'Gecko/20100101 Firefox/74.0'
+    }
+    screen_name = request.get_json()['screen_name']
     url = 'https://vk.com/' + screen_name
-    req = requests.get(url, headers = header)
+    req = requests.get(url, headers=header)
     if not req.ok:
         return 'Error'
     html = bs4.BeautifulSoup(req.text)
-    profile_short = html.find(id = 'profile_short')
-    profile_full = html.find(id = 'profile_full')
+    profile_short = html.find(id='profile_short')
+    profile_full = html.find(id='profile_full')
     profile = bs4.BeautifulSoup(
         f'''<div class="profile_info_block">
                 <div class="profile_info_header_wrap">
@@ -86,7 +100,9 @@ def add_account():
     page_name = html.find('h1', 'page_name').text
     json_result = json.dumps(parse_profile(profile)).replace('\'', '')
     db_conn = get_db()
-    db_conn.execute(f"DELETE FROM Accounts WHERE screen_name = '{screen_name}';")
+    db_conn.execute(
+        f"DELETE FROM Accounts WHERE screen_name = '{screen_name}';"
+    )
     db_conn.commit()
     db_conn.execute(f"""INSERT INTO Accounts (name, screen_name, profile) VALUES (
         '{page_name}',
@@ -95,7 +111,12 @@ def add_account():
     );""")
     db_conn.commit()
     db_conn.close()
-    return 'OK'
+    return (
+        json.dumps({'success': True}),
+        200,
+        {'ContentType': 'application/json'}
+    )
+
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -106,3 +127,4 @@ def close_connection(exception):
 if __name__ == '__main__':
     init_db()
     app.run()
+

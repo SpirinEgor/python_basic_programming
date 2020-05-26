@@ -27,14 +27,23 @@ function draw_tree() {
 function processForm(e) {
     if (e.preventDefault) e.preventDefault();
     let screen_name = $('#screen_name')[0].value;
-    $.get('http://127.0.0.1:5000/add_account?screen_name=' + screen_name,
-        function (data) {
-            if (data == 'OK') {
-                draw_tree();
-            } else {
-                console.log("Can't add new account");
-            }
+    let promise = new Promise(function(resolve, reject) {
+        $.ajax({
+            type: "POST",
+	        contentType: "application/json; charset=utf-8",
+            url: "http://127.0.0.1:5000/add_account",
+            data: JSON.stringify({screen_name: screen_name}),
+            dataType: "json",
+            success: function (data) {resolve(data);},
+            error: function (err) {reject(err);}
         });
+    });
+    promise.then(function (_) {
+        draw_tree();
+    }).catch(function (err) {
+        console.log(err);
+        console.log("Can't add new account");
+    });
 }
 
 const form = document.getElementById('form');

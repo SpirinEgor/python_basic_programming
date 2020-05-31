@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>Basic client</title>
+    <script language="javascript">
+    function show(){
+    var a = document.getElementById('inputImage').value;
+    document.getElementById('Before').src=a;
+    document.getElementById('After').src=a+"_colorized.png";
+    }
+    </script>
+</head>
+<body>
+
+<div class="container mt-5">
+    <form id="form" action='http://127.0.0.1:5000/image' method='post' enctype='multipart/form-data'>
+        <div class="form-group">
+            <label for="inputName">Name of image</label><br>
+            <input type="file" id="inputImage" name="image">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

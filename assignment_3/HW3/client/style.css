@@ -1,0 +1,50 @@
+html{
+    margin:0;
+    font-family: georgia;
+    font-size: 2vh;
+    color: #006400;
+}
+#form{
+    margin-left: 5%;
+    margin-top:3%;
+}
+#inputImage{
+    border-radius: 20px;
+    padding:.8em;
+    margin-top:1%;
+    width:30%;
+    font-size: inherit;
+    font-family: inherit;
+    border-color: #ADFF2F;
+    color: inherit;
+}
+.btn{
+    border-radius: 20px;
+    padding:.8em;
+    background-color: #ADFF2F;
+    border-color: #ADFF2F;
+    margin-top:1%;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+}
+.container-fluid{
+    margin-left: 5%;
+    margin-top:3%;
+}
+.thead-dark{
+    background-color:#006400;
+    color: #ADFF2F;
+}
+#Show{
+    width: 90%;
+}
+#Before{
+    width:40%;
+}
+#After{
+    width:40%;
+}
+img{
+    width: inherit;
+}

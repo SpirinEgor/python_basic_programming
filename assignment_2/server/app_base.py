@@ -1,20 +1,20 @@
 from flask import Flask
-import requests                                                                                                                                                                        
+import requests
 
 app = Flask(__name__)
 
 
 @app.route('/')
 def hello_world():
-    r = requests.get('https://rplnews.ru/')                                                                                                                                                 
+    r = requests.get('https://rplnews.ru/')
     html = r.text
     print(html)
-    return "zalupa"
+    return "family_friendly"
 
 
-@app.route('/zalupa')
-def zalupa():
-    return 'Zalupa'
+@app.route('/family_friendly')
+def family_friendly():
+    return 'This server is now family-friendly'
 
 
 if __name__ == '__main__':

@@ -37,12 +37,13 @@ def show_image():
             </head>
             <body>
                 <div id="Show">
-                    <img id="Before" src='''  + filename + '''>
+                    <img id="Before" src=''' + filename + '''>
                     <img id="After" src=''' + filename[:-4] + '_processed.jpg'+'''>
                 </div>
             </body>
         </html>
         '''
+
 
 def get_outputs_names(net):
     layers_names = net.getLayerNames()
@@ -51,7 +52,7 @@ def get_outputs_names(net):
 
 def draw_predicted(classes, frame, class_id, conf, left, top, right, bottom):
     cv.rectangle(frame, (left, top), (right, bottom), (255, 178, 50), 3)
-    
+
     label = '%.2f' % conf
     if classes:
         assert(class_id < len(classes))
@@ -60,7 +61,8 @@ def draw_predicted(classes, frame, class_id, conf, left, top, right, bottom):
     label_size, base_line = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 0.5, 1)
     top = max(top, label_size[1])
     cv.rectangle(frame, (left, top - round(1.5*label_size[1])), (left + round(1.5*label_size[0]), top + base_line), (255, 255, 255), cv.FILLED)
-    cv.putText(frame, label, (left, top), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0,0,0), 1)
+    cv.putText(frame, label, (left, top), cv.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 0), 1)
+
 
 def postprocess(classes, frame, outs):
     frame_height = frame.shape[0]
@@ -95,41 +97,41 @@ def postprocess(classes, frame, outs):
         height = box[3]
         draw_predicted(classes, frame, class_ids[i], confidences[i], left, top, left + width, top + height)
 
+
 def object_detection(filename):
     classes_file = "model/coco.names"
     classes = None
     with open(classes_file, 'rt') as f:
         classes = f.read().rstrip('\n').split('\n')
 
-    model_configuration = "model/yolov3.cfg";
-    model_weights = "model/yolov3.weights";
+    model_configuration = "model/yolov3.cfg"
+    model_weights = "model/yolov3.weights"
 
     net = cv.dnn.readNetFromDarknet(model_configuration, model_weights)
     net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
     net.setPreferableTarget(cv.dnn.DNN_TARGET_CPU)
-    
+
     window_name = 'Deep learning object detection in OpenCV'
     cv.namedWindow(window_name, cv.WINDOW_NORMAL)
 
     if not os.path.isfile(filename):
         print("Input image file ", filename, " doesn't exist")
         sys.exit(1)
-        
+
     cap = cv.VideoCapture(filename)
     output_file = filename[:-4]+'_processed.jpg'
 
     _, frame = cap.read()
 
-    blob = cv.dnn.blobFromImage(frame, 1/255, (input_width, input_height), [0,0,0], 1, crop=False)
+    blob = cv.dnn.blobFromImage(frame, 1/255, (input_width, input_height), [0, 0, 0], 1, crop=False)
     net.setInput(blob)
-    
+
     outs = net.forward(get_outputs_names(net))
     postprocess(classes, frame, outs)
     t, _ = net.getPerfProfile()
     label = 'Inference time: %.2f ms' % (t * 1000.0 / cv.getTickFrequency())
     cv.putText(frame, label, (0, 15), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255))
     cv.imwrite(output_file, frame.astype(np.uint8))
-
 
 
 @app.route('/<filename>')

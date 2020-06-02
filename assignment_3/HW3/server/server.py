@@ -1,12 +1,10 @@
-import json
-import requests
 import numpy as np
 import cv2 as cv
 import os.path
 import sys
 
 
-from flask import Flask, g, redirect, request, url_for, send_from_directory
+from flask import Flask, request, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
@@ -100,7 +98,6 @@ def postprocess(classes, frame, outs):
 
 def object_detection(filename):
     classes_file = "model/coco.names"
-    classes = None
     with open(classes_file, 'rt') as f:
         classes = f.read().rstrip('\n').split('\n')
 

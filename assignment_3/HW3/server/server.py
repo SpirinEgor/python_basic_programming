@@ -108,9 +108,6 @@ def object_detection(filename):
     net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
     net.setPreferableTarget(cv.dnn.DNN_TARGET_CPU)
 
-    window_name = 'Deep learning object detection in OpenCV'
-    cv.namedWindow(window_name, cv.WINDOW_NORMAL)
-
     if not os.path.isfile(filename):
         print("Input image file ", filename, " doesn't exist")
         sys.exit(1)

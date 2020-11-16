@@ -10,6 +10,7 @@ app = Flask(__name__)
 CORS(app)
 
 DATABASE = 'my_database.sqlite'
+female_news = []
 
 
 def get_db():
@@ -23,6 +24,7 @@ def init_db():
     with app.app_context():
         db = get_db()
         cursor = db.cursor()
+        cursor.executescript("""DROP TABLE IF EXISTS FemaleNews""")
         cursor.executescript(
             """CREATE TABLE IF NOT EXISTS FemaleNews
                (id integer primary key,
@@ -30,36 +32,36 @@ def init_db():
                source text not null)"""
         )
 
-        femaleNews = []
-
-        wonderzine = requests.get('https://www.wonderzine.com/')
-        soup_wonderzine = BeautifulSoup(wonderzine.content, 'html.parser')
-        wonderzine_news = soup_wonderzine.find_all('div', {"class": "title"})
-        for elem in wonderzine_news:
-            femaleNews.append((elem.a.text, 'Wonderzine'))
-
-
-        cosmopolitan = requests.get('https://www.cosmo.ru/news/')
-        soup_cosmopolitan = BeautifulSoup(cosmopolitan.content, 'html.parser')
-        cosmopolitan_news = soup_cosmopolitan.find_all('a', {"class": "news-section-link"})
-        for elem in cosmopolitan_news:
-            femaleNews.append((elem.h3.text, 'Cosmopolitan'))
-
-
-        vogue = requests.get('https://www.vogue.ru/lifestyle')
-        soup_vogue = BeautifulSoup(vogue.content, 'html.parser')
-        vogue_news = soup_vogue.find_all('h3', {"data-test-id": "Hed"})
-        for elem in vogue_news:
-            femaleNews.append((elem.text, 'Vogue'))
-
-        femaleNews.sort(key=lambda x: x[0])
-
-        for elem in femaleNews:
-            print(elem[0])
-            cursor.execute("""INSERT INTO FemaleNews (title,source) VALUES(?,?)""", (elem[0], elem[1]))
-
         db.commit()
 
+
+def add_news(female_news):
+    wonderzine = requests.get('https://www.wonderzine.com/')
+    soup_wonderzine = BeautifulSoup(wonderzine.content, 'html.parser')
+    wonderzine_news = soup_wonderzine.find_all('div', {"class": "title"})
+    female_news += [(elem.a.text, 'Wonderzine') for elem in wonderzine_news]
+
+    cosmopolitan = requests.get('https://www.cosmo.ru/news/')
+    soup_cosmopolitan = BeautifulSoup(cosmopolitan.content, 'html.parser')
+    cosmopolitan_news = soup_cosmopolitan.find_all('div', {"class": "article-tile__title-wrapper"})
+    female_news += [(elem.h3.text, 'Cosmopolitan') for elem in cosmopolitan_news]
+
+    vogue = requests.get('https://www.vogue.ru/lifestyle')
+    soup_vogue = BeautifulSoup(vogue.content, 'html.parser')
+    vogue_news = soup_vogue.find_all('a', {"data-test-id": "Hed"})
+    female_news += [(elem.text, 'Vogue') for elem in vogue_news]
+
+    female_news.sort(key=lambda x: x[0])
+
+
+def fill_bd():
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+
+        cursor.executemany('INSERT INTO FemaleNews (title,source) VALUES(?,?)', female_news)
+
+        db.commit()
 
 @app.route('/get_all')
 def get_all():
@@ -80,4 +82,6 @@ def close_connection(exception):
 
 if __name__ == '__main__':
     init_db()
+    add_news(female_news)
+    fill_bd()
     app.run()

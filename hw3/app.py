@@ -16,12 +16,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Apply affine transform calculated using srcTri and dstTri to src and
 # output an image of size.
-def apply_affine_transform(src, srcTri, dstTri, size):
+def apply_affine_transform(src, src_tri, dst_tri, size):
     # Given a pair of triangles, find the affine transform.
-    warpMat = cv2.getAffineTransform(np.float32(srcTri), np.float32(dstTri))
+    warp_mat = cv2.getAffineTransform(np.float32(src_tri), np.float32(dst_tri))
 
     # Apply the Affine Transform just found to the src image
-    dst = cv2.warpAffine(src, warpMat, (size[0], size[1]), None, flags=cv2.INTER_LINEAR,
+    dst = cv2.warpAffine(src, warp_mat, (size[0], size[1]), None, flags=cv2.INTER_LINEAR,
                          borderMode=cv2.BORDER_REFLECT_101)
 
     return dst
@@ -29,15 +29,11 @@ def apply_affine_transform(src, srcTri, dstTri, size):
 
 # Check if a point is inside a rectangle
 def rect_contains(rect, point):
-    if point[0] < rect[0]:
+    if not rect[0] < point[0] < rect[0] + rect[2] or\
+       not rect[1] < point[1] < rect[1] + rect[3]:
         return False
-    elif point[1] < rect[1]:
-        return False
-    elif point[0] > rect[0] + rect[2]:
-        return False
-    elif point[1] > rect[1] + rect[3]:
-        return False
-    return True
+    else:
+        return True
 
 
 # calculate delanauy triangle
@@ -49,20 +45,18 @@ def calculate_delaunay_triangles(rect, points):
     for p in points:
         subdiv.insert(p)
 
-    triangleList = subdiv.getTriangleList()
+    triangle_list = subdiv.getTriangleList()
 
-    delaunayTri = []
+    delaunay_tri = []
 
     pt = []
 
-    for t in triangleList:
-        pt.append((t[0], t[1]))
-        pt.append((t[2], t[3]))
-        pt.append((t[4], t[5]))
-
+    for t in triangle_list:
         pt1 = (t[0], t[1])
         pt2 = (t[2], t[3])
         pt3 = (t[4], t[5])
+
+        pt += [pt1, pt2, pt3]
 
         if rect_contains(rect, pt1) and rect_contains(rect, pt2) and rect_contains(rect, pt3):
             ind = []
@@ -73,11 +67,11 @@ def calculate_delaunay_triangles(rect, points):
                         ind.append(k)
                         # Three points form a triangle. Triangle array corresponds to the file tri.txt in FaceMorph
             if len(ind) == 3:
-                delaunayTri.append((ind[0], ind[1], ind[2]))
+                delaunay_tri.append((ind[0], ind[1], ind[2]))
 
         pt = []
 
-    return delaunayTri
+    return delaunay_tri
 
 
 # Warps and alpha blends triangular regions from img1 and img2 to img
@@ -87,34 +81,34 @@ def warp_triangle(img1, img2, t1, t2):
     r2 = cv2.boundingRect(np.float32([t2]))
 
     # Offset points by left top corner of the respective rectangles
-    t1Rect = []
-    t2Rect = []
-    t2RectInt = []
+    t1_rect = []
+    t2_rect = []
+    t2_rect_int = []
 
     for i in range(0, 3):
-        t1Rect.append(((t1[i][0] - r1[0]), (t1[i][1] - r1[1])))
-        t2Rect.append(((t2[i][0] - r2[0]), (t2[i][1] - r2[1])))
-        t2RectInt.append(((t2[i][0] - r2[0]), (t2[i][1] - r2[1])))
+        t1_rect.append(((t1[i][0] - r1[0]), (t1[i][1] - r1[1])))
+        t2_rect.append(((t2[i][0] - r2[0]), (t2[i][1] - r2[1])))
+        t2_rect_int.append(((t2[i][0] - r2[0]), (t2[i][1] - r2[1])))
 
     # Get mask by filling triangle
     mask = np.zeros((r2[3], r2[2], 3), dtype=np.float32)
-    cv2.fillConvexPoly(mask, np.int32(t2RectInt), (1.0, 1.0, 1.0), 16, 0);
+    cv2.fillConvexPoly(mask, np.int32(t2_rect_int), (1.0, 1.0, 1.0), 16, 0);
 
     # Apply warpImage to small rectangular patches
-    img1Rect = img1[r1[1]:r1[1] + r1[3], r1[0]:r1[0] + r1[2]]
-    # img2Rect = np.zeros((r2[3], r2[2]), dtype = img1Rect.dtype)
+    img1_rect = img1[r1[1]:r1[1] + r1[3], r1[0]:r1[0] + r1[2]]
+    # img2_rect = np.zeros((r2[3], r2[2]), dtype = img1_rect.dtype)
 
     size = (r2[2], r2[3])
 
-    img2Rect = apply_affine_transform(img1Rect, t1Rect, t2Rect, size)
+    img2_rect = apply_affine_transform(img1_rect, t1_rect, t2_rect, size)
 
-    img2Rect = img2Rect * mask
+    img2_rect = img2_rect * mask
 
     # Copy triangular region of the rectangular patch to the output image
     img2[r2[1]:r2[1] + r2[3], r2[0]:r2[0] + r2[2]] = img2[r2[1]:r2[1] + r2[3], r2[0]:r2[0] + r2[2]] * (
             (1.0, 1.0, 1.0) - mask)
 
-    img2[r2[1]:r2[1] + r2[3], r2[0]:r2[0] + r2[2]] = img2[r2[1]:r2[1] + r2[3], r2[0]:r2[0] + r2[2]] + img2Rect
+    img2[r2[1]:r2[1] + r2[3], r2[0]:r2[0] + r2[2]] = img2[r2[1]:r2[1] + r2[3], r2[0]:r2[0] + r2[2]] + img2_rect
 
 
 def get_points(img):
@@ -140,9 +134,9 @@ def get_points(img):
 
 def swap_faces(source1, source2):
     # Read images
-    img1 = cv2.imread(source1)
-    img2 = cv2.imread(source2)
-    img1Warped = np.copy(img2)
+    img1 = cv2.imread(os.path.join(UPLOAD_FOLDER, source1))
+    img2 = cv2.imread(os.path.join(UPLOAD_FOLDER, source2))
+    img1_warped = np.copy(img2)
 
     # Read array of corresponding points
     points1 = get_points(img1)
@@ -152,15 +146,15 @@ def swap_faces(source1, source2):
     hull1 = []
     hull2 = []
 
-    hullIndex = cv2.convexHull(np.array(points2), returnPoints=False)
+    hull_index = cv2.convexHull(np.array(points2), returnPoints=False)
 
-    for i in range(0, len(hullIndex)):
-        hull1.append(points1[int(hullIndex[i])])
-        hull2.append(points2[int(hullIndex[i])])
+    for i in range(0, len(hull_index)):
+        hull1.append(points1[int(hull_index[i])])
+        hull2.append(points2[int(hull_index[i])])
 
     # Find delanauy traingulation for convex hull points
-    sizeImg2 = img2.shape
-    rect = (0, 0, sizeImg2[1], sizeImg2[0])
+    size_img2 = img2.shape
+    rect = (0, 0, size_img2[1], size_img2[0])
 
     dt = calculate_delaunay_triangles(rect, hull2)
 
@@ -177,7 +171,7 @@ def swap_faces(source1, source2):
             t1.append(hull1[dt[i][j]])
             t2.append(hull2[dt[i][j]])
 
-        warp_triangle(img1, img1Warped, t1, t2)
+        warp_triangle(img1, img1_warped, t1, t2)
 
     # Calculate Mask
     hull8U = []
@@ -193,7 +187,7 @@ def swap_faces(source1, source2):
     center = (r[0] + int(r[2] / 2), r[1] + int(r[3] / 2))
 
     # Clone seamlessly.
-    output = cv2.seamlessClone(np.uint8(img1Warped), img2, mask, center, cv2.NORMAL_CLONE)
+    output = cv2.seamlessClone(np.uint8(img1_warped), img2, mask, center, cv2.NORMAL_CLONE)
     cv2.imwrite(os.path.join(app.config['UPLOAD_FOLDER'], RESULT_IMG_NAME), output)
 
 
